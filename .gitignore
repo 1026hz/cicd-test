@@ -1,37 +1,75 @@
+### Documentation ###
 HELP.md
-.gradle
+
+### Gradle ###
+.gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+### Gradle Wrappers ###
+gradle-app.setting
+gradle.properties
+gradlew
+gradlew.bat
+
+### Java Compiled Output ###
 bin/
+out/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+### STS (Spring Tool Suite) ###
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
 ### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
 
 ### VS Code ###
 .vscode/
+
+### OS / Editor Noise ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+### Logs / Caches ###
+*.log
+logs/
+.cache/
+tmp/
+*.tmp
+
+### Sensitive Files (add only if present and untracked) ###
+.env
+.env.local
+.env.*.local
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+*.crt
+
+### Custom Project Artifacts ###
+fileHashs.lock
