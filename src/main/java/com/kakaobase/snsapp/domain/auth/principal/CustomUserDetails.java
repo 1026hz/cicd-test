@@ -21,6 +21,7 @@ public class CustomUserDetails implements UserDetails {
     private final String username;
     private final String role;
     private final String className;
+    private final boolean isBanned;
 
     /**
      * Member 엔티티로부터 CustomUserDetails 객체를 생성합니다.
@@ -33,6 +34,7 @@ public class CustomUserDetails implements UserDetails {
         this.username = member.getEmail();
         this.role = member.getRole();
         this.className = member.getClassName();
+        this.isBanned = member.getIsBanned();
     }
 
     /**
@@ -98,11 +100,12 @@ public class CustomUserDetails implements UserDetails {
     /**
      * 사용자 계정이 활성화되었는지 확인합니다.
      *
-     * @return 계정이 활성화되었으면 true
+     * @return 계정이 삭제되거나 벤되지 않으면 true
      */
     @Override
     public boolean isEnabled() {
-        return !member.isDeleted();
+        // 삭제 여부와 밴 여부를 함께 확인
+        return !member.isDeleted() && member.getIsBanned();
     }
 
     /**
@@ -130,6 +133,15 @@ public class CustomUserDetails implements UserDetails {
      */
     public String getRole() {
         return role;
+    }
+
+    /**
+     * 사용자가 밴 상태인지 확인합니다.
+     *
+     * @return 밴 상태면 true
+     */
+    public boolean isBanned() {
+        return isBanned;
     }
 
     /**

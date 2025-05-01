@@ -46,6 +46,11 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("탈퇴한 사용자입니다: " + email);
         }
 
+        if (member.getIsBanned()) {
+            log.debug("계정이 정지된 사용자입니다: {}", email);
+            throw new UsernameNotFoundException("계정이 정지되었습니다: " + email);
+        }
+
         return new CustomUserDetails(member);
     }
 
@@ -76,8 +81,12 @@ public class CustomUserDetailsService implements UserDetailsService {
                 });
 
         if (member.isDeleted()) {
-            log.debug("탈퇴한 사용자입니다: {}", id);
             throw new CustomException(GeneralErrorCode.RESOURCE_NOT_FOUND, "탈퇴한 사용자입니다.");
+        }
+
+        if (member.getIsBanned()) {
+            log.debug("계정이 정지된 사용자입니다: {}", id);
+            throw new CustomException(GeneralErrorCode.RESOURCE_NOT_FOUND, "계정이 정지되었습니다.");
         }
 
         return new CustomUserDetails(member);
