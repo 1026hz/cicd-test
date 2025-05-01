@@ -3,7 +3,6 @@ package com.kakaobase.snsapp.domain.members.entity;
 import com.kakaobase.snsapp.global.common.entity.BaseUpdateTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
@@ -26,16 +25,6 @@ public class Member extends BaseUpdateTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    /**
-     * 회원 역할을 정의하는 열거형입니다.
-     */
-    public enum Role {
-        USER,
-        ADMIN,
-        BOT
-    }
-
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'USER'")
@@ -53,23 +42,15 @@ public class Member extends BaseUpdateTimeEntity {
     @Column(nullable = false, length = 60)
     private String password;
 
-    /**
-     * 카카오 테크 부트캠프 기수를 정의하는 열거형입니다.
-     */
-    public enum ClassName {
-        PANGYO_1,
-        PANGYO_2,
-        JEJU_1,
-        JEJU_2,
-        JEJU_3
-    }
-
     @Column(name = "class_name", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private ClassName className;
 
     @Column(name = "profile_img_url", length = 512)
     private String profileImgUrl;
+
+    @Column(name = "github_url", length = 255)
+    private String githubUrl;
 
     @Column(name = "is_banned")
     @ColumnDefault("false")
@@ -86,15 +67,38 @@ public class Member extends BaseUpdateTimeEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Builder
+    /**
+     * 회원 역할을 정의하는 열거형입니다.
+     */
+    public enum Role {
+        USER,   // 일반 사용자
+        ADMIN,  // 관리자
+        BOT     // 봇
+    }
+
+    /**
+     * 카카오 테크 부트캠프 기수를 정의하는 열거형입니다.
+     */
+    public enum ClassName {
+        PANGYO_1,
+        PANGYO_2,
+        JEJU_1,
+        JEJU_2,
+        JEJU_3
+    }
+
+    /**
+     * 회원 엔티티를 생성합니다. 커스텀 Converter에서 사용됩니다.
+     */
     public Member(String email, String password, String name, String nickname,
-                  ClassName className, String profileImgUrl, Role role) {
+                  ClassName className, String profileImgUrl, String githubUrl, Role role) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.nickname = nickname;
         this.className = className;
         this.profileImgUrl = profileImgUrl;
+        this.githubUrl = githubUrl;
         this.role = (role != null) ? role : Role.USER;
         this.isBanned = false;
         this.followingCount = 0;
@@ -102,12 +106,17 @@ public class Member extends BaseUpdateTimeEntity {
     }
 
     /**
-     * 회원 프로필 정보를 업데이트합니다.
+     * 회원 프로필 이미지를 업데이트합니다.
      */
-    public void updateProfile(String name, String nickname, String profileImgUrl) {
-        this.name = name;
-        this.nickname = nickname;
+    public void updateProfile(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;
+    }
+
+    /**
+     * GitHub URL을 업데이트합니다.
+     */
+    public void updateGithubUrl(String githubUrl) {
+        this.githubUrl = githubUrl;
     }
 
     /**
@@ -122,13 +131,6 @@ public class Member extends BaseUpdateTimeEntity {
      */
     public void updateRole(Role role) {
         this.role = role;
-    }
-
-    /**
-     * 회원 기수를 업데이트합니다.
-     */
-    public void updateClassName(ClassName className) {
-        this.className = className;
     }
 
     /**
@@ -172,10 +174,22 @@ public class Member extends BaseUpdateTimeEntity {
 
     /**
      * 회원 역할을 문자열로 반환합니다.
-     * JWT 토큰에 저장하기 위한 용도로 사용됩니다.
+     * JWT 토큰에 반환하는 타입 호환성을 위해 별도로 선언됩니다.
+     *
+     * @return 역할 이름(String)
      */
     public String getRole() {
         return this.role.name();
+    }
+
+    /**
+     * 회원 기수를 문자열로 반환합니다.
+     * JWT 토큰에 저장하기 위한 용도로 사용됩니다.
+     *
+     * @return 기수 이름(String)
+     */
+    public String getClassName() {
+        return this.className.name();
     }
 
     /**
