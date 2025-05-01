@@ -1,11 +1,13 @@
 package com.kakaobase.snsapp.global.security.jwt;
 
+import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
-import com.kakaobase.snsapp.global.error.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -16,8 +18,9 @@ import java.util.Date;
 
 /**
  * JWT 토큰 파싱 및 클레임 추출을 담당하는 유틸리티 클래스입니다.
- * 토큰에서 사용자 ID, 역할, 발급 시간, 만료 시간 등의 정보를 추출합니다.
+ * 토큰에서 사용자 ID, 역할, 발급 시간, 만료 시간 등의 정보를 추출하는 책임만 갖습니다.
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -60,8 +63,12 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+        } catch (ExpiredJwtException e) {
+            // 만료된 토큰에서도 클레임을 읽을 수 있도록 처리
+            return e.getClaims();
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.INVALID_JWT_TOKEN);
+            log.error("JWT 토큰에서 클레임을 파싱할 수 없습니다: {}", e.getMessage());
+            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
         }
     }
 
@@ -103,5 +110,15 @@ public class JwtUtil {
      */
     public Date getExpiration(String token) {
         return getClaims(token).getExpiration();
+    }
+
+    /**
+     * 토큰 파싱에 사용되는 SecretKey를 반환합니다.
+     * JwtTokenValidator에서 사용됩니다.
+     *
+     * @return JWT 서명 검증에 사용되는 SecretKey
+     */
+    public SecretKey getSecretKey() {
+        return this.secretKey;
     }
 }
