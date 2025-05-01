@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum GeneralErrorCode implements BaseErrorCode {
 
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "unauthorized", "인증이 필요합니다.", null),
-    FORBIDDEN(HttpStatus.FORBIDDEN, "forbidden", "접근 권한이 없습니다.", null),
     INVALID_QUERY_PARAMETER(HttpStatus.BAD_REQUEST, "invalid_query_parameter", "요청 쿼리 파라미터가 유효하지 않습니다.", null),
     MISSING_REQUIRED_FIELD(HttpStatus.BAD_REQUEST, "missing_required_field", "필수 입력 값이 누락되었습니다.", null),
     INVALID_FORMAT(HttpStatus.BAD_REQUEST, "invalid_format", "입력 형식이 잘못되었습니다.", null),
