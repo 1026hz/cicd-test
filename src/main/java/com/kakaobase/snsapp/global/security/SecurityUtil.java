@@ -1,7 +1,5 @@
 package com.kakaobase.snsapp.global.security;
 
-import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
-import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,32 +20,42 @@ import java.util.stream.Collectors;
 public class SecurityUtil {
 
     /**
-     * 현재 인증된 사용자의 ID를 반환합니다.
+     * 현재 인증된 사용자의 ID를 Optional로 반환합니다.
+     * 인증 정보가 없는 경우 빈 Optional을 반환합니다.
      *
-     * @return 사용자 ID
-     * @throws CustomException 인증된 사용자가 없는 경우 발생
+     * @return 사용자 ID를 담은 Optional
      */
-    public static String getCurrentUserId() {
+    public static Optional<String> getCurrentUserIdOpt() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || authentication.getPrincipal() == null) {
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "인증 정보가 없습니다.");
+        if (authentication == null || authentication.getPrincipal() == null || "anonymousUser".equals(authentication.getPrincipal())) {
+            return Optional.empty();
         }
 
-        return authentication.getName();
+        return Optional.ofNullable(authentication.getName());
     }
 
     /**
-     * 현재 인증된 사용자의 역할을 반환합니다.
+     * 현재 인증된 사용자의 ID를 반환합니다.
+     * 인증 정보가 없는 경우 null을 반환합니다.
      *
-     * @return 사용자 역할
-     * @throws CustomException 인증된 사용자가 없는 경우 발생
+     * @return 사용자 ID, 인증되지 않은 경우 null
      */
-    public static String getCurrentUserRole() {
+    public static String getCurrentUserId() {
+        return getCurrentUserIdOpt().orElse(null);
+    }
+
+    /**
+     * 현재 인증된 사용자의 역할을 Optional로 반환합니다.
+     * 인증 정보나 역할 정보가 없는 경우 빈 Optional을 반환합니다.
+     *
+     * @return 사용자 역할을 담은 Optional
+     */
+    public static Optional<String> getCurrentUserRoleOpt() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || authentication.getAuthorities() == null) {
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "인증 정보가 없습니다.");
+            return Optional.empty();
         }
 
         Set<String> roles = authentication.getAuthorities().stream()
@@ -56,8 +65,17 @@ public class SecurityUtil {
         // "ROLE_" 접두사 제거
         return roles.stream()
                 .findFirst()
-                .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
-                .orElseThrow(() -> new CustomException(GeneralErrorCode.UNAUTHORIZED, "역할 정보가 없습니다."));
+                .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role);
+    }
+
+    /**
+     * 현재 인증된 사용자의 역할을 반환합니다.
+     * 인증 정보나 역할 정보가 없는 경우 null을 반환합니다.
+     *
+     * @return 사용자 역할, 인증되지 않은 경우 null
+     */
+    public static String getCurrentUserRole() {
+        return getCurrentUserRoleOpt().orElse(null);
     }
 
     /**
@@ -67,7 +85,9 @@ public class SecurityUtil {
      */
     public static boolean isAuthenticated() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && authentication.isAuthenticated();
+        return authentication != null &&
+                authentication.isAuthenticated() &&
+                !"anonymousUser".equals(authentication.getPrincipal());
     }
 
     /**
@@ -77,12 +97,13 @@ public class SecurityUtil {
      * @return 일치하면 true, 그렇지 않으면 false
      */
     public static boolean isCurrentUser(String userId) {
-        try {
-            String currentUserId = getCurrentUserId();
-            return currentUserId.equals(userId);
-        } catch (CustomException e) {
+        if (userId == null) {
             return false;
         }
+
+        return getCurrentUserIdOpt()
+                .map(currentUserId -> currentUserId.equals(userId))
+                .orElse(false);
     }
 
     /**
@@ -92,11 +113,12 @@ public class SecurityUtil {
      * @return 역할을 가지고 있으면 true, 그렇지 않으면 false
      */
     public static boolean hasRole(String role) {
-        try {
-            String currentRole = getCurrentUserRole();
-            return currentRole.equals(role);
-        } catch (CustomException e) {
+        if (role == null) {
             return false;
         }
+
+        return getCurrentUserRoleOpt()
+                .map(currentRole -> currentRole.equals(role))
+                .orElse(false);
     }
 }

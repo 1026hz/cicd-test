@@ -1,7 +1,5 @@
 package com.kakaobase.snsapp.global.security.jwt;
 
-import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
-import com.kakaobase.snsapp.global.error.exception.CustomException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -25,11 +23,12 @@ public class JwtTokenValidator {
 
     /**
      * JWT 토큰의 유효성을 검증합니다.
-     * 유효하지 않은 경우 UNAUTHORIZED 에러 코드와 함께 CustomException을 발생시킵니다.
+     * 유효하지 않은 경우 적절한 인증 예외를 발생시킵니다.
+     * 이 예외는 JwtAuthenticationFilter에서 캐치되어 SecurityContextHolder를 초기화합니다.
      *
      * @param token 검증할 JWT 토큰
      * @return 토큰이 유효하면 true
-     * @throws CustomException 토큰이 유효하지 않을 경우 발생
+     * @throws JwtException 토큰이 유효하지 않을 경우 발생
      */
     public boolean validateToken(String token) {
         try {
@@ -39,20 +38,20 @@ public class JwtTokenValidator {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.error("만료된 JWT 토큰입니다: {}", e.getMessage());
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "토큰이 만료되었습니다.");
+            log.debug("만료된 JWT 토큰입니다: {}", e.getMessage());
+            throw e; // Spring Security에서 처리하도록 예외를 그대로 전파
         } catch (SignatureException e) {
-            log.error("유효하지 않은 JWT 서명입니다: {}", e.getMessage());
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "토큰 서명이 유효하지 않습니다.");
+            log.debug("유효하지 않은 JWT 서명입니다: {}", e.getMessage());
+            throw e; // Spring Security에서 처리하도록 예외를 그대로 전파
         } catch (MalformedJwtException e) {
-            log.error("잘못된 형식의 JWT 토큰입니다: {}", e.getMessage());
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "잘못된 형식의 토큰입니다.");
+            log.debug("잘못된 형식의 JWT 토큰입니다: {}", e.getMessage());
+            throw e; // Spring Security에서 처리하도록 예외를 그대로 전파
         } catch (UnsupportedJwtException e) {
-            log.error("지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "지원되지 않는 토큰입니다.");
+            log.debug("지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
+            throw e; // Spring Security에서 처리하도록 예외를 그대로 전파
         } catch (JwtException | IllegalArgumentException e) {
-            log.error("JWT 토큰이 유효하지 않습니다: {}", e.getMessage());
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+            log.debug("JWT 토큰이 유효하지 않습니다: {}", e.getMessage());
+            throw new JwtException("유효하지 않은 토큰입니다.", e); // 명확한 메시지와 함께 원본 예외를 포함
         }
     }
 }

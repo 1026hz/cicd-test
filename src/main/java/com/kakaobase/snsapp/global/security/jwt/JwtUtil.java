@@ -1,7 +1,5 @@
 package com.kakaobase.snsapp.global.security.jwt;
 
-import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
-import com.kakaobase.snsapp.global.error.exception.CustomException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -51,10 +49,11 @@ public class JwtUtil {
 
     /**
      * JWT 토큰에서 모든 클레임을 추출합니다.
+     * 인증/인가 관련 예외는 발생시키지 않으며, 예외 발생 시 null을 반환합니다.
+     * 인증 관련 예외는 JwtTokenValidator와 Spring Security에서 처리합니다.
      *
      * @param token JWT 토큰
-     * @return 토큰에 포함된 모든 클레임
-     * @throws CustomException 토큰 파싱 실패 시 발생
+     * @return 토큰에 포함된 모든 클레임, 파싱 실패 시 null
      */
     public Claims getClaims(String token) {
         try {
@@ -67,8 +66,8 @@ public class JwtUtil {
             // 만료된 토큰에서도 클레임을 읽을 수 있도록 처리
             return e.getClaims();
         } catch (Exception e) {
-            log.error("JWT 토큰에서 클레임을 파싱할 수 없습니다: {}", e.getMessage());
-            throw new CustomException(GeneralErrorCode.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+            log.debug("JWT 토큰에서 클레임을 파싱할 수 없습니다: {}", e.getMessage());
+            return null;
         }
     }
 
@@ -76,40 +75,44 @@ public class JwtUtil {
      * JWT 토큰에서 사용자 ID를 추출합니다.
      *
      * @param token JWT 토큰
-     * @return 사용자 ID
+     * @return 사용자 ID, 토큰이 유효하지 않으면, null
      */
     public String getSubject(String token) {
-        return getClaims(token).getSubject();
+        Claims claims = getClaims(token);
+        return claims != null ? claims.getSubject() : null;
     }
 
     /**
      * JWT 토큰에서 사용자 역할을 추출합니다.
      *
      * @param token JWT 토큰
-     * @return 사용자 역할
+     * @return 사용자 역할, 토큰이 유효하지 않거나 역할이 없으면 null
      */
     public String getRole(String token) {
-        return getClaims(token).get("role", String.class);
+        Claims claims = getClaims(token);
+        return claims != null ? claims.get("role", String.class) : null;
     }
 
     /**
      * JWT 토큰에서 발급 시간을 추출합니다.
      *
      * @param token JWT 토큰
-     * @return 토큰 발급 시간
+     * @return 토큰 발급 시간, 토큰이 유효하지 않으면 null
      */
     public Date getIssuedAt(String token) {
-        return getClaims(token).getIssuedAt();
+        Claims claims = getClaims(token);
+        return claims != null ? claims.getIssuedAt() : null;
     }
 
     /**
      * JWT 토큰에서 만료 시간을 추출합니다.
      *
      * @param token JWT 토큰
-     * @return 토큰 만료 시간
+     * @return 토큰 만료 시간, 토큰이 유효하지 않으면 null
      */
     public Date getExpiration(String token) {
-        return getClaims(token).getExpiration();
+        Claims claims = getClaims(token);
+        return claims != null ? claims.getExpiration() : null;
     }
 
     /**
