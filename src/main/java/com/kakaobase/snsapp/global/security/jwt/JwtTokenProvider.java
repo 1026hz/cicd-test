@@ -38,15 +38,17 @@ public class JwtTokenProvider {
      *
      * @param userId 사용자 ID
      * @param role 사용자 역할
+     * @param className 사용자의 기수(제주1기, 판교2기 등)
      * @return 생성된 Access Token
      */
-    public String createAccessToken(String userId, String role) {
+    public String createAccessToken(String userId, String role, String className) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + accessTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject(userId)
                 .claim("role", role)
+                .claim("class_name", className)  // 기수 정보 추가
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(secretKey, SignatureAlgorithm.HS256)

@@ -16,6 +16,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * HTTP 요청에서 JWT 토큰을 추출하고 검증하여 Security Context에 인증 정보를 설정하는 필터입니다.
@@ -50,17 +52,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 // 토큰 유효성 검증
                 if (jwtTokenValidator.validateToken(token)) {
-                    // 토큰에서 사용자 ID와 역할 추출
+                    // 토큰에서 사용자 ID, 역할, 기수 정보 추출
                     String userId = jwtUtil.getSubject(token);
                     String role = jwtUtil.getRole(token);
+                    String className = jwtUtil.getClassName(token);
 
                     // Spring Security 인증 객체 생성
-                    UsernamePasswordAuthenticationToken authentication = createAuthenticationToken(userId, role);
+                    UsernamePasswordAuthenticationToken authentication = createAuthenticationToken(userId, role, className);
 
                     // Security Context에 인증 정보 설정
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    log.debug("JWT 인증 성공. 사용자: {}, 역할: {}", userId, role);
+                    log.debug("JWT 인증 성공. 사용자: {}, 역할: {}, 기수: {}", userId, role, className);
                 }
             } catch (CustomException e) {
                 // 토큰 검증 실패 시 로깅
@@ -80,12 +83,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @param role 사용자 역할
      * @return 인증 객체
      */
-    private UsernamePasswordAuthenticationToken createAuthenticationToken(String userId, String role) {
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
-        return new UsernamePasswordAuthenticationToken(
+    private UsernamePasswordAuthenticationToken createAuthenticationToken(String userId, String role, String className) {
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
+
+        Map<String, String> details = new HashMap<>();
+        details.put("class_name", className);
+
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userId,
                 null, // 자격 증명(credentials)은 필요 없음
                 Collections.singleton(authority)
         );
+
+        authToken.setDetails(details);
+        return authToken;
     }
 }

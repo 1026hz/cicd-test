@@ -94,6 +94,17 @@ public class JwtUtil {
     }
 
     /**
+     * JWT 토큰에서 기수(class_name) 정보를 추출합니다.
+     *
+     * @param token JWT 토큰
+     * @return 기수 정보, 토큰이 유효하지 않거나 정보가 없으면 null
+     */
+    public String getClassName(String token) {
+        Claims claims = getClaims(token);
+        return claims != null ? claims.get("class_name", String.class) : null;
+    }
+
+    /**
      * JWT 토큰에서 발급 시간을 추출합니다.
      *
      * @param token JWT 토큰

@@ -79,6 +79,28 @@ public class SecurityUtil {
     }
 
     /**
+     * 현재 인증된 사용자의 기수(class_name)를 반환합니다.
+     *
+     * @return 사용자 기수, 인증되지 않았거나 정보가 없으면 null
+     */
+    public static String getCurrentUserClassName() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getDetails() == null) {
+            return null;
+        }
+
+        if (authentication.getDetails() instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, String> details = (Map<String, String>) authentication.getDetails();
+            return details.get("class_name");
+        }
+
+
+        return null;
+    }
+
+    /**
      * 현재 사용자가 인증되었는지 확인합니다.
      *
      * @return 인증되었으면 true, 그렇지 않으면 false
