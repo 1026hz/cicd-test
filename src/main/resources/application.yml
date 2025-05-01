@@ -1,0 +1,8 @@
+spring:
+  application:
+    name : 22-tenten-be
+
+jwt:
+  secret: ${JWT_SECRET}
+  token:
+    access-expiration-time: 1800000 # 30?
