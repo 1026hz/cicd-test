@@ -204,6 +204,6 @@ public class Member extends BaseUpdateTimeEntity {
      * (삭제되지 않았고, 밴 상태가 아닌 경우)
      */
     public boolean isEnabled() {
-        return !isDeleted() && (isBanned == null || !isBanned);
+        return !isDeleted() && !isBanned;
     }
 }
