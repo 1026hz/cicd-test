@@ -11,12 +11,13 @@ import java.util.Optional;
 
 /**
  * 회원 정보에 접근하기 위한 레포지토리 인터페이스입니다.
+ * 인덱싱 전략에 맞춰 최적화된 쿼리 메서드들을 제공합니다.
  */
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
     /**
-     * 이메일로 회원을 조회합니다.
+     * 이메일로 활성 회원을 조회합니다. (인덱스: idx_email_not_deleted 사용)
      *
      * @param email 회원 이메일
      * @return 이메일에 해당하는 회원, 없으면 Optional.empty()
@@ -24,15 +25,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByEmail(String email);
 
     /**
-     * 닉네임으로 회원을 조회합니다.
-     *
-     * @param nickname 회원 닉네임
-     * @return 닉네임에 해당하는 회원, 없으면 Optional.empty()
-     */
-    Optional<Member> findByNickname(String nickname);
-
-    /**
-     * 이메일 존재 여부를 확인합니다.
+     * 이메일로 활성 회원 존재 여부를 확인합니다. (인덱스: idx_email_not_deleted 사용)
      *
      * @param email 확인할 이메일
      * @return 존재하면 true, 아니면 false
@@ -40,7 +33,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByEmail(String email);
 
     /**
-     * 닉네임 존재 여부를 확인합니다.
+     * 닉네임으로 활성 회원 존재 여부를 확인합니다. (인덱스: idx_nickname_not_deleted 사용)
      *
      * @param nickname 확인할 닉네임
      * @return 존재하면 true, 아니면 false
@@ -48,7 +41,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByNickname(String nickname);
 
     /**
-     * 기수별 회원 목록을 조회합니다.
+     * 기수별 활성 회원 목록을 조회합니다.
      *
      * @param className 기수명
      * @return 해당 기수의 회원 목록
@@ -56,23 +49,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByClassName(Member.ClassName className);
 
     /**
-     * 이름으로 회원을 검색합니다. (부분 일치)
-     *
-     * @param name 검색할 이름
-     * @return 이름이 포함된 회원 목록
-     */
-    List<Member> findByNameContaining(String name);
-
-    /**
-     * 닉네임으로 회원을 검색합니다. (부분 일치)
-     *
-     * @param nickname 검색할 닉네임
-     * @return 닉네임이 포함된 회원 목록
-     */
-    List<Member> findByNicknameContaining(String nickname);
-
-    /**
-     * 회원 ID 목록으로 회원 목록을 조회합니다.
+     * 회원 ID 목록으로 활성 회원 목록을 조회합니다.
      *
      * @param ids 회원 ID 목록
      * @return 조회된 회원 목록
@@ -80,29 +57,32 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByIdIn(List<Long> ids);
 
     /**
-     * 팔로워 수가 많은 순으로 회원을 조회합니다.
+     * 이름으로 활성 회원을 검색합니다. (부분 일치)
+     * 성능 최적화를 위해 JPQL 사용
      *
-     * @param limit 조회할 회원 수
-     * @return 팔로워 수 순으로 정렬된 회원 목록
+     * @param name 검색할 이름
+     * @return 이름이 포함된 회원 목록
      */
-    @Query("SELECT m FROM Member m ORDER BY m.followerCount DESC")
-    List<Member> findTopByFollowerCount(int limit);
+    @Query("SELECT m FROM Member m WHERE m.name LIKE %:name% AND m.deletedAt IS NULL")
+    List<Member> searchByName(@Param("name") String name);
 
     /**
-     * 특정 기수의 회원 수를 조회합니다.
+     * 닉네임으로 활성 회원을 검색합니다. (부분 일치)
+     * 성능 최적화를 위해 JPQL 사용
      *
-     * @param className 기수명
-     * @return 해당 기수의 회원 수
+     * @param nickname 검색할 닉네임
+     * @return 닉네임이 포함된 회원 목록
      */
-    long countByClassName(Member.ClassName className);
+    @Query("SELECT m FROM Member m WHERE m.nickname LIKE %:nickname% AND m.deletedAt IS NULL")
+    List<Member> searchByNickname(@Param("nickname") String nickname);
 
     /**
-     * 특정 회원의 프로필 정보를 부분 조회합니다. (성능 최적화)
+     * 특정 회원의 프로필 정보와 팔로우 통계를 조회합니다.
+     * 필요한 컬럼만 선택하여 성능을 최적화합니다.
      *
      * @param id 회원 ID
-     * @return 회원 엔티티 (선택된 필드만 포함)
+     * @return 회원 프로필 정보
      */
-    @Query("SELECT new Member(m.id, m.email, m.name, m.nickname, m.className, m.profileImgUrl, m.githubUrl, m.followerCount, m.followingCount) " +
-            "FROM Member m WHERE m.id = :id")
+    @Query("SELECT m FROM Member m WHERE m.id = :id")
     Optional<Member> findProfileById(@Param("id") Long id);
 }
