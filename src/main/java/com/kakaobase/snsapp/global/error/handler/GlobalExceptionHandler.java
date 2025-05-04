@@ -1,6 +1,7 @@
 package com.kakaobase.snsapp.global.error.handler;
 
-import com.kakaobase.snsapp.global.common.dto.response.CustomResponse;
+import com.kakaobase.snsapp.global.common.response.CustomResponse;
+import com.kakaobase.snsapp.global.error.code.BaseErrorCode;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +29,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<CustomResponse<Void>> handleCustomException(CustomException e) {
+        BaseErrorCode code = e.getErrorCode();
         log.error("CustomException: {}", e.getMessage());
         return ResponseEntity
-                .status(e.getErrorCode().getStatus())
-                .body(e.getErrorCode().getErrorResponse());
+                .status(code.getStatus())
+                .body(CustomResponse.failure(
+                        code.getError(),
+                        code.getMessage(),
+                        e.getEffectiveField()
+                ));
     }
+
 
     /**
      * Bean Validation 예외를 처리합니다.
