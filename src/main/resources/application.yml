@@ -1,8 +1,23 @@
 spring:
   application:
     name : 22-tenten-be
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 jwt:
   secret: ${JWT_SECRET}
   token:
-    access-expiration-time: 1800000 # 30?
+    access-expiration-time: 1800000 # 30분
