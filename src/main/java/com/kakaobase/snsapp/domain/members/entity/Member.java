@@ -2,9 +2,7 @@ package com.kakaobase.snsapp.domain.members.entity;
 
 import com.kakaobase.snsapp.global.common.entity.BaseUpdateTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.SQLDelete;
@@ -15,6 +13,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "members")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @SQLDelete(sql = "UPDATE members SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
@@ -87,23 +87,6 @@ public class Member extends BaseUpdateTimeEntity {
         JEJU_3
     }
 
-    /**
-     * 회원 엔티티를 생성합니다. 커스텀 Converter에서 사용됩니다.
-     */
-    public Member(String email, String password, String name, String nickname,
-                  ClassName className, String profileImgUrl, String githubUrl, Role role) {
-        this.email = email;
-        this.password = password;
-        this.name = name;
-        this.nickname = nickname;
-        this.className = className;
-        this.profileImgUrl = profileImgUrl;
-        this.githubUrl = githubUrl;
-        this.role = (role != null) ? role : Role.USER;
-        this.isBanned = false;
-        this.followingCount = 0;
-        this.followerCount = 0;
-    }
 
     /**
      * 회원 프로필 이미지를 업데이트합니다.
