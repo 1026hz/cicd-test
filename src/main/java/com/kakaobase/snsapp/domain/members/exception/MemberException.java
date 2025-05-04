@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.members.exception;
 
+import com.kakaobase.snsapp.global.error.code.BaseErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 
 /**
@@ -15,6 +16,12 @@ public class MemberException extends CustomException {
      */
     public MemberException(MemberErrorCode errorCode) {
         super(errorCode);
+    }
+    public MemberException(BaseErrorCode errorCode, String field) {
+        super(errorCode, field);
+    }
+    public MemberException(BaseErrorCode errorCode, String field, String additionalMessage) {
+        super(errorCode, field, additionalMessage);
     }
 
 }
