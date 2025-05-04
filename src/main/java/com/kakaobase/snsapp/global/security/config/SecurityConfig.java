@@ -52,6 +52,13 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 // URL 기반 인가 설정
                 .authorizeHttpRequests(auth -> auth
+                        //Swagger관련 경로들
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
                         // 인증 없이 접근 가능한 경로들
                         .requestMatchers("/auth/tokens", "/auth/tokens/refresh").permitAll()
                         .requestMatchers("/users/email/verification-requests").permitAll()
