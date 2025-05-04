@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.members.entity;
 
+import com.kakaobase.snsapp.global.common.entity.BaseSoftDeletableEntity;
 import com.kakaobase.snsapp.global.common.entity.BaseUpdateTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
 @DynamicInsert
 @SQLDelete(sql = "UPDATE members SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @Where(clause = "deleted_at IS NULL")
-public class Member extends BaseUpdateTimeEntity {
+public class Member extends BaseSoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,8 +65,6 @@ public class Member extends BaseUpdateTimeEntity {
     @ColumnDefault("0")
     private Integer followerCount;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 
     /**
      * 회원 역할을 정의하는 열거형입니다.
@@ -173,13 +172,6 @@ public class Member extends BaseUpdateTimeEntity {
      */
     public String getClassName() {
         return this.className.name();
-    }
-
-    /**
-     * 계정이 삭제되었는지 확인합니다.
-     */
-    public boolean isDeleted() {
-        return this.deletedAt != null;
     }
 
     /**
