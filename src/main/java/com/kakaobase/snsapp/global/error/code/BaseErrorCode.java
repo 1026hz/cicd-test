@@ -1,6 +1,6 @@
 package com.kakaobase.snsapp.global.error.code;
 
-import com.kakaobase.snsapp.global.common.dto.response.CustomResponse;
+import com.kakaobase.snsapp.global.common.response.CustomResponse;
 import org.springframework.http.HttpStatus;
 
 /**

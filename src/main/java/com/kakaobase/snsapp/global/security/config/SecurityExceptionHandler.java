@@ -1,7 +1,7 @@
 package com.kakaobase.snsapp.global.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kakaobase.snsapp.global.common.dto.response.CustomResponse;
+import com.kakaobase.snsapp.global.common.response.CustomResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

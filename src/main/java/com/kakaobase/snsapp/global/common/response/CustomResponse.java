@@ -1,4 +1,4 @@
-package com.kakaobase.snsapp.global.common.dto.response;
+package com.kakaobase.snsapp.global.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
