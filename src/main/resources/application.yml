@@ -31,8 +31,15 @@ spring:
           writetimeout: 5000
 
 
-
-jwt:
-  secret: ${JWT_SECRET}
-  token:
-    access-expiration-time: 1800000 # 30분
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    secure: true
+    issuer: kakaobase
+    audience: web
+    access:
+      expiration-time: 1800000 # 30분
+    refresh:
+      expiration-time: 604800000 # 7일
+      token-name: kakaobase_refresh_token
+      path: /auth/tokens/refresh
