@@ -29,7 +29,7 @@ public class JwtUtil {
      *
      * @param secret JWT 서명에 사용된 비밀키
      */
-    public JwtUtil(@Value("${jwt.secret}") String secret) {
+    public JwtUtil(@Value("${app.jwt.secret}") String secret) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

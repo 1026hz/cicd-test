@@ -1,5 +1,7 @@
 package com.kakaobase.snsapp.global.security.jwt;
 
+import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
+import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetailsService;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final JwtTokenValidator jwtTokenValidator;
+    private final CustomUserDetailsService userDetailsService;
 
     /**
      * JWT 토큰을 검증하고 인증 정보를 설정하는 필터 메서드입니다.
@@ -52,18 +55,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 // 토큰 유효성 검증
                 if (jwtTokenValidator.validateToken(token)) {
-                    // 토큰에서 사용자 ID, 역할, 기수 정보 추출
                     String userId = jwtUtil.getSubject(token);
-                    String role = jwtUtil.getRole(token);
-                    String className = jwtUtil.getClassName(token);
 
-                    // Spring Security 인증 객체 생성
-                    UsernamePasswordAuthenticationToken authentication = createAuthenticationToken(userId, role, className);
+                    // DB에서 CustomUserDetails 조회
+                    CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserById(userId);
 
-                    // Security Context에 인증 정보 설정
+                    //CustomUserDetails기반으로 인증 객체 생성
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                    log.debug("JWT 인증 성공. 사용자: {}, 역할: {}, 기수: {}", userId, role, className);
+                    log.debug("JWT 인증 성공: {}", userId);
                 }
             } catch (CustomException e) {
                 // 토큰 검증 실패 시 로깅
@@ -74,29 +79,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 다음 필터 실행
         filterChain.doFilter(request, response);
-    }
-
-    /**
-     * 사용자 ID와 역할 정보를 기반으로 인증 객체를 생성합니다.
-     *
-     * @param userId 사용자 ID
-     * @param role 사용자 역할
-     * @return 인증 객체
-     */
-    private UsernamePasswordAuthenticationToken createAuthenticationToken(String userId, String role, String className) {
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-
-
-        Map<String, String> details = new HashMap<>();
-        details.put("class_name", className);
-
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                userId,
-                null, // 자격 증명(credentials)은 필요 없음
-                Collections.singleton(authority)
-        );
-
-        authToken.setDetails(details);
-        return authToken;
     }
 }
