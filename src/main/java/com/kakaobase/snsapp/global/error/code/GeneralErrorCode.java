@@ -21,23 +21,4 @@ public enum GeneralErrorCode implements BaseErrorCode {
     private final String message;
     private final String field;
 
-    @Override
-    public HttpStatus getStatus() {
-        return status;
-    }
-
-    @Override
-    public String getError() {
-        return error;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
-    }
-
-    @Override
-    public String getField() {
-        return field; // 기본은 null, 상황에 따라 덮어쓸 수 있음
-    }
 }
