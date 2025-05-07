@@ -1,15 +1,12 @@
 package com.kakaobase.snsapp.domain.members.entity;
 
 import com.kakaobase.snsapp.global.common.entity.BaseSoftDeletableEntity;
-import com.kakaobase.snsapp.global.common.entity.BaseUpdateTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "members")

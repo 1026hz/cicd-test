@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -16,11 +18,13 @@ import java.time.LocalDateTime;
  *
  * 이 클래스를 상속받는 엔티티는 다음 어노테이션을 추가해야 합니다:
  * {@code @SQLDelete(sql = "UPDATE 테이블명 SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")}
- * {@code @Where(clause = "deleted_at IS NULL")}
+ *
  */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
+@Filter(name = "deletedFilter")
 public abstract class BaseSoftDeletableEntity extends BaseUpdateTimeEntity {
 
     /**
