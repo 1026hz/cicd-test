@@ -3,9 +3,11 @@ package com.kakaobase.snsapp.global.common.s3.service;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.global.common.s3.dto.PresignedUrlResponseDto;
 import com.kakaobase.snsapp.global.common.s3.exception.S3ErrorCode;
 import com.kakaobase.snsapp.global.common.s3.exception.S3Exception;
+import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,11 +63,13 @@ public class S3Service {
      * @param fileSize 파일 크기 (바이트 단위)
      * @param mimeType 파일의 MIME 타입
      * @param type 이미지 사용 용도 (profile_image, post_image 등)
+     * @param boardType 게시판 타입 (post_image 타입인 경우에만 사용)
      * @return Presigned URL 정보가 포함된 응답 DTO
      * @throws S3Exception MIME 타입이 지원되지 않거나, 파일 크기가 제한을 초과하는 경우,
-     *                    또는 S3 서비스 연결 오류 발생 시
+     *                   또는 S3 서비스 연결 오류 발생 시
      */
-    public PresignedUrlResponseDto generatePresignedUrl(String fileName, Long fileSize, String mimeType, String type) {
+    public PresignedUrlResponseDto generatePresignedUrl(
+            String fileName, Long fileSize, String mimeType, String type, Post.BoardType boardType) {
         // 파일 타입 검증
         if (!ALLOWED_MIME_TYPES.contains(mimeType)) {
             throw new S3Exception(S3ErrorCode.UNSUPPORTED_IMAGE_FORMAT);
@@ -78,7 +82,7 @@ public class S3Service {
 
         try {
             // 파일 경로 및 이름 생성 (타입에 따라 폴더 구분)
-            String objectKey = generateObjectKey(type, fileName);
+            String objectKey = generateObjectKey(type, fileName, boardType);
 
             // 만료 시간 설정
             Date expiration = getExpirationTime();
@@ -104,8 +108,16 @@ public class S3Service {
                     .build();
         } catch (Exception e) {
             log.error("S3 Presigned URL 생성 실패", e);
-            throw new S3Exception(S3ErrorCode.PRESIGNED_URL_GENERATION_FAILED);
+            throw new S3Exception(GeneralErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Presigned URL을 생성합니다. (기존 메서드 - 하위 호환성 유지)
+     */
+    public PresignedUrlResponseDto generatePresignedUrl(
+            String fileName, Long fileSize, String mimeType, String type) {
+        return generatePresignedUrl(fileName, fileSize, mimeType, type, null);
     }
 
     /**
@@ -136,8 +148,19 @@ public class S3Service {
             log.info("S3 객체 삭제 완료: {}", objectKey);
         } catch (Exception e) {
             log.error("S3 객체 삭제 실패: {}", imageUrl, e);
-            throw new S3Exception(S3ErrorCode.S3_SERVICE_ERROR);
+            throw new S3Exception(GeneralErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * 타입별 S3 객체 키를 생성합니다. (기존 메서드 - 하위 호환성 유지)
+     *
+     * @param type 이미지 타입 (profile_image, post_image 등)
+     * @param originalFilename 원본 파일명
+     * @return 생성된 객체 키
+     */
+    private String generateObjectKey(String type, String originalFilename) {
+        return generateObjectKey(type, originalFilename, null);
     }
 
     /**
@@ -145,9 +168,10 @@ public class S3Service {
      *
      * @param type 이미지 타입 (profile_image, post_image 등)
      * @param originalFilename 원본 파일명
+     * @param boardType 게시판 타입 (post_image 타입인 경우에만 사용)
      * @return 생성된 객체 키
      */
-    private String generateObjectKey(String type, String originalFilename) {
+    private String generateObjectKey(String type, String originalFilename, Post.BoardType boardType) {
         // 확장자 추출
         String extension = getFileExtension(originalFilename);
         // UUID 생성
@@ -155,15 +179,40 @@ public class S3Service {
 
         // 타입에 따른 경로 설정
         String path;
-        switch (type) {
-            case "profile_image":
-                path = "profiles";
-                break;
-            case "post_image":
-                path = "posts";
-                break;
-            default:
-                path = "others";
+        if ("profile_image".equals(type)) {
+            path = "profiles";
+        } else if ("post_image".equals(type)) {
+            // 게시판 타입에 따라 세부 경로 지정
+            String boardPath;
+            if (boardType == null) {
+                boardPath = "general";
+            } else {
+                switch (boardType) {
+                    case ALL:
+                        boardPath = "all";
+                        break;
+                    case PANGYO_1:
+                        boardPath = "pangyo1";
+                        break;
+                    case PANGYO_2:
+                        boardPath = "pangyo2";
+                        break;
+                    case JEJU_1:
+                        boardPath = "jeju1";
+                        break;
+                    case JEJU_2:
+                        boardPath = "jeju2";
+                        break;
+                    case JEJU_3:
+                        boardPath = "jeju3";
+                        break;
+                    default:
+                        boardPath = "others";
+                }
+            }
+            path = "posts/" + boardPath;
+        } else {
+            path = "others";
         }
 
         return String.format("%s/%s.%s", path, uuid, extension);

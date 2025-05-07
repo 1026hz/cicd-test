@@ -22,7 +22,7 @@ public enum S3ErrorCode implements BaseErrorCode {
 
 
     // 403 Forbidden
-    S3_ACCESS_DENIED(HttpStatus.FORBIDDEN, "s3_access_denied", "S3 리소스에 대한 접근이 거부되었습니다.", null);s
+    S3_ACCESS_DENIED(HttpStatus.FORBIDDEN, "s3_access_denied", "S3 리소스에 대한 접근이 거부되었습니다.", null);
 
 
     private final HttpStatus status;
