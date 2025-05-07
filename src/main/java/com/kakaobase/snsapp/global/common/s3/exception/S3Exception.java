@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.global.common.s3.exception;
 
+import com.kakaobase.snsapp.global.error.code.BaseErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 
 /**
@@ -17,7 +18,7 @@ public class S3Exception extends CustomException {
      *
      * @param errorCode S3 관련 에러 코드 (S3ErrorCode 열거형)
      */
-    public S3Exception(S3ErrorCode errorCode) {
+    public S3Exception(BaseErrorCode errorCode) {
         super(errorCode);
     }
 
@@ -27,7 +28,7 @@ public class S3Exception extends CustomException {
      * @param errorCode S3 관련 에러 코드 (S3ErrorCode 열거형)
      * @param field 예외가 발생한 필드
      */
-    public S3Exception(S3ErrorCode errorCode, String field) {
+    public S3Exception(BaseErrorCode errorCode, String field) {
         super(errorCode, field);
     }
 
@@ -38,7 +39,7 @@ public class S3Exception extends CustomException {
      * @param field 예외가 발생한 필드
      * @param additionalMessage 추가 오류 메시지
      */
-    public S3Exception(S3ErrorCode errorCode, String field, String additionalMessage) {
+    public S3Exception(BaseErrorCode errorCode, String field, String additionalMessage) {
         super(errorCode, field, additionalMessage);
     }
 }
