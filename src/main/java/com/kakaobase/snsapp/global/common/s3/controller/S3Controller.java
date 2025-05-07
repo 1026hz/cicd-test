@@ -1,11 +1,10 @@
 package com.kakaobase.snsapp.global.common.s3.controller;
 
+import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
 import com.kakaobase.snsapp.global.common.s3.service.S3Service;
 import com.kakaobase.snsapp.global.common.s3.dto.PresignedUrlResponseDto;
-import com.kakaobase.snsapp.global.common.s3.exception.S3ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -74,20 +73,14 @@ public class S3Controller {
     @GetMapping("/presigned-url")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CustomResponse<PresignedUrlResponseDto>> getPresignedUrl(
-            @Parameter(description = "업로드할 파일명", example = "profile.jpg", required = true)
             @RequestParam @NotBlank(message = "파일명은 필수입니다") String fileName,
-
-            @Parameter(description = "파일 크기 (바이트 단위)", example = "1024000", required = true)
             @RequestParam @Positive(message = "파일 크기는 0보다 커야 합니다") Long fileSize,
-
-            @Parameter(description = "파일의 MIME 타입", example = "image/jpeg", required = true)
             @RequestParam @NotBlank(message = "MIME 타입은 필수입니다") String mimeType,
-
-            @Parameter(description = "이미지 사용 용도 (profile_image, post_image 등)", example = "profile_image", required = true)
-            @RequestParam @NotBlank(message = "이미지 타입은 필수입니다") String type
+            @RequestParam @NotBlank(message = "이미지 타입은 필수입니다") String type,
+            @RequestParam(required = false) Post.BoardType boardType
     ) {
         // Presigned URL 생성 및 반환
-        PresignedUrlResponseDto response = s3Service.generatePresignedUrl(fileName, fileSize, mimeType, type);
+        PresignedUrlResponseDto response = s3Service.generatePresignedUrl(fileName, fileSize, mimeType, type, boardType);
 
         return ResponseEntity.ok(
                 CustomResponse.success("S3에 이미지를 업로드할 수 있도록 presigned URL을 발급했습니다.", response)
