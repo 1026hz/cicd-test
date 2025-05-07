@@ -1,7 +1,7 @@
 package com.kakaobase.snsapp.global.common.s3.controller;
 
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
-import com.kakaobase.snsapp.global.common.s3.S3Service;
+import com.kakaobase.snsapp.global.common.s3.service.S3Service;
 import com.kakaobase.snsapp.global.common.s3.dto.PresignedUrlResponseDto;
 import com.kakaobase.snsapp.global.common.s3.exception.S3ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
