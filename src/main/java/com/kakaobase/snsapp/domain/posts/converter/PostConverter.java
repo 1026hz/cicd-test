@@ -80,8 +80,8 @@ public class PostConverter {
             Map<Long, Map<String, String>> memberInfoMap,
             List<Long> likedPostIds,
             List<Long> followingIds,
-            Long myId,
-            Map<Long, List<String>> whoLikedMap) {
+            Long myId //,Map<Long, List<String>> whoLikedMap
+            ) {
 
         List<PostResponseDto.PostListItem> items = posts.stream()
                 .map(post -> {
@@ -107,7 +107,7 @@ public class PostConverter {
                     boolean isLiked = likedPostIds.contains(post.getId());
 
                     // 좋아요 누른 사용자 목록
-                    List<String> whoLiked = whoLikedMap.getOrDefault(post.getId(), List.of());
+                    //List<String> whoLiked = whoLikedMap.getOrDefault(post.getId(), List.of());
 
                     return new PostResponseDto.PostListItem(
                             post.getId(),
@@ -119,8 +119,8 @@ public class PostConverter {
                             post.getLikeCount(),
                             post.getCommentCount(),
                             isMine,
-                            isLiked,
-                            whoLiked
+                            isLiked
+                            //whoLiked
                     );
                 })
                 .collect(Collectors.toList());

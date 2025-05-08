@@ -23,7 +23,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, PostLike.Pos
      * 특정 회원이 특정 게시글에 좋아요를 눌렀는지 확인합니다.
      *
      * @param memberId 회원 ID
-     * @param postId 게시글 ID
+     * @param postId   게시글 ID
      * @return 좋아요 정보 (Optional)
      */
     Optional<PostLike> findByMemberIdAndPostId(Long memberId, Long postId);
@@ -32,7 +32,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, PostLike.Pos
      * 특정 회원이 특정 게시글에 좋아요를 눌렀는지 여부를 확인합니다.
      *
      * @param memberId 회원 ID
-     * @param postId 게시글 ID
+     * @param postId   게시글 ID
      * @return 좋아요를 눌렀으면 true, 아니면 false
      */
     boolean existsByMemberIdAndPostId(Long memberId, Long postId);
@@ -51,7 +51,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, PostLike.Pos
      * 게시글 목록 조회 시 좋아요 여부를 확인하는 데 사용됩니다.
      *
      * @param memberId 회원 ID
-     * @param posts 게시글 목록
+     * @param postIds  게시글 목록
      * @return 좋아요를 누른 게시글 ID 목록
      */
     @Query("SELECT pl.postId FROM PostLike pl WHERE pl.memberId = :memberId AND pl.postId IN :postIds")
@@ -91,14 +91,27 @@ public interface PostLikeRepository extends JpaRepository<PostLike, PostLike.Pos
      * @param memberId 회원 ID
      */
     void deleteByMemberId(Long memberId);
+
     /**
-     * 특정 게시글에 좋아요를 누른 상위 N명의 회원 ID를 조회합니다.
-     * 게시글에 좋아요를 누른 사용자 목록을 표시할 때 사용됩니다.
+     * 특정 게시글에 좋아요를 누른 회원 ID를 커서 기반으로 조회합니다.
+     * 게시글에 좋아요를 누른 회원 중 활성 상태인 회원만 조회합니다.
      *
      * @param postId 게시글 ID
-     * @param limit 최대 조회할 회원 수
-     * @return 좋아요를 누른 회원 ID 목록 (최대 limit명)
+     * @param lastMemberId 마지막으로 조회한 회원 ID (첫 페이지에서는 null 또는 0)
+     * @param limit 조회할 회원 수
+     * @return 좋아요를 누른 활성 회원 ID 목록
      */
-    @Query(value = "SELECT pl.member_id FROM posts_likes pl WHERE pl.post_id = :postId ORDER BY pl.created_at DESC LIMIT :limit", nativeQuery = true)
-    List<Long> findTopNMemberIdsByPostId(@Param("postId") Long postId, @Param("limit") int limit);
+//    @Query(value = "SELECT pl.members_id FROM post_likes pl " +
+//            "JOIN members m ON pl.members_id = m.id " +
+//            "WHERE pl.posts_id = :postId " +
+//            "AND m.deleted_at IS NULL " +
+//            "AND (:lastMemberId IS NULL OR pl.members_id < :lastMemberId) " +
+//            "ORDER BY pl.members_id DESC " +
+//            "LIMIT :limit",
+//            nativeQuery = true)
+//    List<Long> findMemberIdsByPostIdWithCursor(
+//            @Param("postId") Long postId,
+//            @Param("lastMemberId") Long lastMemberId,
+//            @Param("limit") int limit);
+
 }

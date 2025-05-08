@@ -1,6 +1,5 @@
 package com.kakaobase.snsapp.domain.posts.entity;
 
-import com.kakaobase.snsapp.global.common.entity.BaseCreatedTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -24,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @IdClass(PostLike.PostLikeId.class)
-public class PostLike extends BaseCreatedTimeEntity {
+public class PostLike {
 
     @Id
     @Column(name = "member_id", nullable = false)
