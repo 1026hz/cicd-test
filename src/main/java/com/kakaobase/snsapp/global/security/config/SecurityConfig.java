@@ -55,6 +55,7 @@ public class SecurityConfig {
                         //Swagger관련 경로들
                         .requestMatchers(
                                 "/v3/api-docs",
+                                "/v3/api-docs/",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**"
