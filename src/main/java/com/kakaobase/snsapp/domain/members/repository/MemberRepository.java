@@ -85,4 +85,43 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      */
     @Query("SELECT m FROM Member m WHERE m.id = :id")
     Optional<Member> findProfileById(@Param("id") Long id);
+
+    /**
+     * 여러 회원 ID로 회원 목록을 조회합니다.
+     * 게시글 목록 조회 시 여러 작성자 정보를 한 번에 가져오는 데 사용됩니다.
+     *
+     * @param ids 조회할 회원 ID 목록
+     * @return 조회된 회원 엔티티 목록
+     */
+    List<Member> findAllByIdIn(List<Long> ids);
+
+    /**
+     * 닉네임 일부로 회원을 검색하고 결과 수를 제한합니다.
+     * 회원 검색 기능에 사용되며, 대소문자를 구분하지 않고 일부만 일치해도 결과에 포함됩니다.
+     *
+     * @param nickname 검색할 닉네임 문자열 (부분 일치)
+     * @param limit 최대 결과 수
+     * @return 검색된 회원 엔티티 목록 (최대 limit개)
+     */
+    @Query("SELECT m FROM Member m WHERE LOWER(m.nickname) LIKE LOWER(CONCAT('%', :nickname, '%')) ORDER BY m.nickname ASC LIMIT :limit")
+    List<Member> findByNicknameContainingLimit(String nickname, int limit);
+
+    /**
+     * 정확한 닉네임으로 회원을 조회합니다.
+     * 특정 닉네임을 가진 회원의 정보가 필요할 때 사용됩니다.
+     *
+     * @param nickname 조회할 정확한 닉네임
+     * @return 조회된 회원 엔티티 (Optional)
+     */
+    Optional<Member> findByNickname(String nickname);
+
+    /**
+     * 여러 닉네임으로 회원 목록을 조회합니다.
+     * 여러 닉네임에 해당하는 회원 정보를 한 번에 가져오는 데 사용됩니다.
+     * 주로 'who_liked' 목록 처리 시 닉네임 목록을 ID로 변환할 때 활용됩니다.
+     *
+     * @param nicknames 조회할 닉네임 목록
+     * @return 조회된 회원 엔티티 목록
+     */
+    List<Member> findAllByNicknameIn(List<String> nicknames);
 }
