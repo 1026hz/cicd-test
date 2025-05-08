@@ -119,11 +119,11 @@ public class PostResponseDto {
 
             @Schema(description = "좋아요 여부", example = "false")
             @JsonProperty("is_liked")
-            Boolean isLiked,
+            Boolean isLiked
 
-            @Schema(description = "좋아요 누른 사용자 목록", example = "[\"backend.sam\", \"choi.dan\"]")
-            @JsonProperty("who_liked")
-            List<String> whoLiked
+//            @Schema(description = "좋아요 누른 사용자 목록", example = "[\"backend.sam\", \"choi.dan\"]")
+//            @JsonProperty("who_liked")
+//            List<String> whoLiked
     ) {}
 
     /**
