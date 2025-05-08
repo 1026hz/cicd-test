@@ -54,11 +54,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //Swagger관련 경로들
                         .requestMatchers(
-                                "/v3/api-docs/",
-                                "/swagger-ui/",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/swagger-resources/",
-                                "/swagger-config/"
+                                "/swagger-ui/**"
                         ).permitAll()
                         // 인증 없이 접근 가능한 경로들
                         .requestMatchers("/auth/tokens", "/auth/tokens/refresh").permitAll()
