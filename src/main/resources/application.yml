@@ -43,3 +43,11 @@ app:
       expiration-time: 604800000 # 7일
       token-name: kakaobase_refresh_token
       path: /auth/tokens/refresh
+
+springdoc:
+  api-docs:
+    path: /api/v3/api-docs
+  swagger-ui:
+    path: /api/swagger-ui/index.html
+    url: /api/v3/api-docs
+    config-url: /api/v3/api-docs/swagger-config
