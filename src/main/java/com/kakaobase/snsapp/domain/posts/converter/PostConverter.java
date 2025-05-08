@@ -32,8 +32,8 @@ public class PostConverter {
         // 사용자 정보 생성
         PostResponseDto.UserInfo user = new PostResponseDto.UserInfo(
                 post.getMemberId(),
-                userInfo.getOrDefault("nickname", "알 수 없음"),
-                userInfo.getOrDefault("imageUrl", null),
+                userInfo.get("nickname"),
+                userInfo.get("imageUrl"),
                 isFollowing
         );
 
@@ -72,7 +72,6 @@ public class PostConverter {
      * @param likedPostIds 좋아요한 게시글 ID 목록
      * @param followingIds 팔로우 중인 사용자 ID 목록
      * @param myId 현재 로그인한 사용자 ID
-     * @param whoLikedMap 게시글별 좋아요 누른 사용자 목록 맵 (게시글 ID -> 닉네임 목록)
      * @return 게시글 목록 응답 DTO
      */
     public static PostResponseDto.PostListResponse toPostListResponse(
@@ -85,15 +84,17 @@ public class PostConverter {
 
         List<PostResponseDto.PostListItem> items = posts.stream()
                 .map(post -> {
-                    Map<String, String> userInfo = memberInfoMap.getOrDefault(
-                            post.getMemberId(),
-                            Map.of("nickname", "알 수 없음", "imageUrl", null)
-                    );
+                    Map<String, String> userInfo = memberInfoMap.get(post.getMemberId());
+                    if (userInfo == null) {
+                        // 서비스 레이어에서 memberInfoMap 구성 시 모든 회원 정보가 포함되어야 함
+                        // 여기서 NullPointerException이 발생하면 서비스 레이어의 문제
+                        throw new IllegalStateException("사용자 정보를 찾을 수 없습니다: " + post.getMemberId());
+                    }
 
                     PostResponseDto.UserInfo user = new PostResponseDto.UserInfo(
                             post.getMemberId(),
-                            userInfo.getOrDefault("nickname", "알 수 없음"),
-                            userInfo.getOrDefault("imageUrl", null),
+                            userInfo.get("nickname"),
+                            userInfo.get("imageUrl"),
                             followingIds.contains(post.getMemberId())
                     );
 
@@ -106,9 +107,6 @@ public class PostConverter {
                     boolean isMine = myId != null && myId.equals(post.getMemberId());
                     boolean isLiked = likedPostIds.contains(post.getId());
 
-                    // 좋아요 누른 사용자 목록
-                    //List<String> whoLiked = whoLikedMap.getOrDefault(post.getId(), List.of());
-
                     return new PostResponseDto.PostListItem(
                             post.getId(),
                             user,
@@ -120,7 +118,6 @@ public class PostConverter {
                             post.getCommentCount(),
                             isMine,
                             isLiked
-                            //whoLiked
                     );
                 })
                 .collect(Collectors.toList());
@@ -147,8 +144,8 @@ public class PostConverter {
         // 사용자 정보 생성
         PostResponseDto.UserInfo user = new PostResponseDto.UserInfo(
                 post.getMemberId(),
-                userInfo.getOrDefault("nickname", "알 수 없음"),
-                userInfo.getOrDefault("imageUrl", null),
+                userInfo.get("nickname"),
+                userInfo.get("imageUrl"),
                 isFollowing
         );
 
@@ -236,11 +233,6 @@ public class PostConverter {
      * @return 게시판 타입 문자열
      */
     public static String toPostType(Post.BoardType boardType) {
-        if (boardType == Post.BoardType.ALL) {
-            return "all";
-        }
-
-        // 대문자와 underscore를 snake_case로 변환 (PANGYO_1 -> pangyo_1)
         return boardType.name().toLowerCase();
     }
 }
