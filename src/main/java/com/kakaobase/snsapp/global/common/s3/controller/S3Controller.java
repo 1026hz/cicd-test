@@ -80,7 +80,7 @@ public class S3Controller {
             @RequestParam(required = false) Post.BoardType boardType
     ) {
         // Presigned URL 생성 및 반환
-        PresignedUrlResponseDto response = s3Service.generatePresignedUrl(fileName, fileSize, mimeType, type, boardType);
+        PresignedUrlResponseDto response = s3Service.generatePresignedUrl(fileName, fileSize, mimeType, type);
 
         return ResponseEntity.ok(
                 CustomResponse.success("S3에 이미지를 업로드할 수 있도록 presigned URL을 발급했습니다.", response)
