@@ -6,6 +6,7 @@ import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -66,6 +67,21 @@ public class GlobalExceptionHandler {
                 .status(GeneralErrorCode.INVALID_FORMAT.getStatus())
                 .body(GeneralErrorCode.INVALID_FORMAT.getErrorResponse());
     }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<CustomResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        log.error("HttpMessageNotReadable Exception: {}", e.getMessage());
+
+        return ResponseEntity
+                .status(GeneralErrorCode.INVALID_FORMAT.getStatus())
+                .body(CustomResponse.failure(
+                        GeneralErrorCode.INVALID_FORMAT.getError(),
+                        GeneralErrorCode.INVALID_FORMAT.getMessage(),
+                        null
+                ));
+    }
+
+
 
     /**
      * 필수 파라미터 누락 예외를 처리합니다.
