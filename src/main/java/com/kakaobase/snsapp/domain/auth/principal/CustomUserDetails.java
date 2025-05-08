@@ -2,6 +2,7 @@ package com.kakaobase.snsapp.domain.auth.principal;
 
 import com.kakaobase.snsapp.domain.members.entity.Member;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,12 +14,12 @@ import java.util.Collections;
  * Spring Security의 UserDetails 인터페이스를 구현한 사용자 인증 정보 클래스입니다.
  * 인증된 사용자의 정보와 권한을 캡슐화합니다.
  */
+@Slf4j
 @Getter
 public class CustomUserDetails implements UserDetails {
 
     private final Member member;
     private final String id;
-    private final String username;
     private final String role;
     private final String className;
     private final boolean isBanned;
@@ -31,7 +32,6 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(Member member) {
         this.member = member;
         this.id = member.getId().toString();
-        this.username = member.getEmail();
         this.role = member.getRole();
         this.className = member.getClassName();
         this.isBanned = member.getIsBanned();
@@ -58,13 +58,14 @@ public class CustomUserDetails implements UserDetails {
     }
 
     /**
-     * 사용자의 식별자를 반환합니다. 여기서는 이메일을 사용합니다.
+     * 사용자의 식별자를 반환합니다. memberId를 반환합니다.
      *
-     * @return 사용자 식별자 (이메일)
+     * @return 사용자 식별자 (memberid)
      */
     @Override
     public String getUsername() {
-        return username;
+        log.debug("CustomUserDetails.getUsername() 호출: {}", id);
+        return String.valueOf(member.getId());
     }
 
     /**
@@ -105,7 +106,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         // 삭제 여부와 밴 여부를 함께 확인
-        return !member.isDeleted() && member.getIsBanned();
+        return !member.isDeleted() && !member.getIsBanned();
     }
 
     /**
