@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -127,4 +128,25 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("boardType") Post.BoardType boardType,
             @Param("keyword") String keyword,
             Pageable pageable);
+
+    /**
+     * 특정 게시판의 최신 게시글을 생성일시와 ID 기준으로 내림차순 정렬하여 조회합니다.
+     *
+     * @param boardType 게시판 유형
+     * @param limit 조회할 게시글 수
+     * @return 최신 게시글 목록
+     */
+    @Query(value = "SELECT p FROM Post p WHERE p.boardType = :boardType AND p.deletedAt IS NULL ORDER BY p.createdAt DESC, p.id DESC LIMIT :limit")
+    List<Post> findTopNByBoardTypeOrderByCreatedAtDescIdDesc(@Param("boardType") Post.BoardType boardType, @Param("limit") int limit);
+
+    /**
+     * 특정 게시판에서 주어진 ID보다 작은 게시글을 ID 기준으로 내림차순 정렬하여 조회합니다.
+     *
+     * @param boardType 게시판 유형
+     * @param cursor 마지막으로 조회한 게시글 ID
+     * @param limit 조회할 게시글 수
+     * @return 다음 페이지 게시글 목록
+     */
+    @Query(value = "SELECT p FROM Post p WHERE p.boardType = :boardType AND p.id < :cursor AND p.deletedAt IS NULL ORDER BY p.id DESC LIMIT :limit")
+    List<Post> findByBoardTypeAndIdLessThanOrderByIdDesc(@Param("boardType") Post.BoardType boardType, @Param("cursor") Long cursor, @Param("limit") int limit);
 }
