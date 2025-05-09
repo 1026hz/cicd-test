@@ -2,6 +2,7 @@ package com.kakaobase.snsapp.domain.auth.principal;
 
 import com.kakaobase.snsapp.domain.members.entity.Member;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,23 +19,31 @@ import java.util.Collections;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final Member member;
+    private transient String email;
+    private transient String password;
     private final String id;
     private final String role;
     private final String className;
-    private final boolean isBanned;
+    private final boolean isEnabled;
 
-    /**
-     * Member 엔티티로부터 CustomUserDetails 객체를 생성합니다.
-     *
-     * @param member 회원 엔티티
-     */
-    public CustomUserDetails(Member member) {
-        this.member = member;
-        this.id = member.getId().toString();
-        this.role = member.getRole();
-        this.className = member.getClassName();
-        this.isBanned = member.getIsBanned();
+
+
+    //JWT인증 시 사용
+    public CustomUserDetails(String id, String role, String className, boolean isEnabled) {
+        this.id = id;
+        this.role = role;
+        this.className = className;
+        this.isEnabled = isEnabled;
+    }
+
+    //로그인 시 사용
+    public CustomUserDetails(String email, String password, String id, String role, String className, boolean isEnabled) {
+        this.email = email;
+        this.password = password;
+        this.id = id;
+        this.role = role;
+        this.className = className;
+        this.isEnabled = isEnabled;
     }
 
     /**
@@ -54,7 +63,7 @@ public class CustomUserDetails implements UserDetails {
      */
     @Override
     public String getPassword() {
-        return member.getPassword();
+        return password;
     }
 
     /**
@@ -65,7 +74,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         log.debug("CustomUserDetails.getUsername() 호출: {}", id);
-        return String.valueOf(member.getId());
+        return id;
     }
 
     /**
@@ -106,51 +115,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         // 삭제 여부와 밴 여부를 함께 확인
-        return !member.isDeleted() && !member.getIsBanned();
-    }
-
-    /**
-     * 사용자의 ID를 반환합니다.
-     *
-     * @return 사용자 ID
-     */
-    public String getId() {
-        return id;
-    }
-
-    /**
-     * 사용자의 기수(class_name)를 반환합니다.
-     *
-     * @return 사용자 기수
-     */
-    public String getClassName() {
-        return className;
-    }
-
-    /**
-     * 사용자의 역할을 반환합니다.
-     *
-     * @return 사용자 역할
-     */
-    public String getRole() {
-        return role;
-    }
-
-    /**
-     * 사용자가 밴 상태인지 확인합니다.
-     *
-     * @return 밴 상태면 true
-     */
-    public boolean isBanned() {
-        return isBanned;
-    }
-
-    /**
-     * 원본 Member 엔티티를 반환합니다.
-     *
-     * @return Member 엔티티
-     */
-    public Member getMember() {
-        return member;
+        return isEnabled;
     }
 }
