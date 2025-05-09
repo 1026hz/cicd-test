@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 /**
  * Spring Security 설정을 담당하는 클래스입니다.
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CorsFilter corsFilter;
 
     /**
      * Spring Security 필터 체인을 구성합니다.
@@ -40,14 +42,14 @@ public class SecurityConfig {
         return http
                 // CSRF 보호 비활성화 (REST API는 상태를 저장하지 않으므로 CSRF 공격으로부터 안전)
                 .csrf(AbstractHttpConfigurer::disable)
-                // CORS 설정 활성화
-                .cors(cors -> cors.configure(http))
                 // 세션 관리 - STATELESS로 설정하여 세션을 사용하지 않음
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTP 기본 인증 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
                 // 폼 로그인 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)
+                //cors설정
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
                 // URL 기반 인가 설정
                 .authorizeHttpRequests(auth -> auth
                         //Swagger관련 경로들
