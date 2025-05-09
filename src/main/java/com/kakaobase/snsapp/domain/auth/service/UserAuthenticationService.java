@@ -1,10 +1,11 @@
 package com.kakaobase.snsapp.domain.auth.service;
 
-import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
 import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
 import com.kakaobase.snsapp.domain.auth.exception.AuthException;
 import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
+import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetailsService;
 import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
+
 import com.kakaobase.snsapp.domain.members.entity.Member;
 import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
@@ -12,6 +13,7 @@ import com.kakaobase.snsapp.global.security.jwt.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,28 +33,44 @@ public class UserAuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final CookieUtil cookieUtil;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final CustomUserDetailsService userDetailsService;
 
     /**
      * 사용자 로그인 처리 및 인증 토큰 발급
      */
     @Transactional
     public TokenWithCookie login(String email, String password, String userAgent) {
-        // 1. 사용자 인증
-        Member member = authenticateUser(email, password);
+        // 1. 이메일로 사용자 조회
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, email));
 
-        // 2. 인증 객체 생성
-        Authentication authentication = createAuthenticationFromMember(member);
+        // 2. 비밀번호 검증
+        if (!passwordEncoder.matches(password, member.getPassword())) {
+            throw new AuthException(AuthErrorCode.INVALID_PASSWORD);
+        }
 
-        // 3. 리프레시 토큰 생성 및 저장
+
+        // 3. CustomUserDetailsService를 사용하여 인증 객체 생성
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserById(member.getId().toString());
+
+        // 4. Authentication 객체 생성
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,  // 인증 완료 후에는 credentials는 null
+                userDetails.getAuthorities()
+        );
+
+        // 5. Refresh Token 발급 및 저장
         String refreshToken = securityTokenManager.createRefreshToken(
-                member.getId(),
+                Long.parseLong(userDetails.getId()),
                 userAgent
         );
 
-        // 4. 액세스 토큰 생성
+        // 6. 액세스 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(authentication);
 
-        // 5. 리프레시 토큰 쿠키 생성
+        // 7. 리프레시 토큰 쿠키 생성
         Cookie refreshTokenCookie = cookieUtil.createRefreshTokenCookie(refreshToken);
 
         return new TokenWithCookie(accessToken, refreshTokenCookie);
@@ -68,19 +86,19 @@ public class UserAuthenticationService {
         }
 
         // 1. 리프레시 토큰 검증 및 사용자 ID 추출
-        Long memberId = securityTokenManager.validateRefreshTokenAndGetUserId(refreshToken);
+        Long userId = securityTokenManager.validateRefreshTokenAndGetUserId(refreshToken);
 
-        // 2. 사용자 정보 조회
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, "userId"));
+        // 2. CustomUserDetailsService를 통해 인증 정보 로드
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserById(String.valueOf(userId));
 
-        // 3. 사용자 상태 확인
-        validateUserStatus(member);
+        // 3. 인증 객체 생성
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
 
-        // 4. 인증 객체 생성
-        Authentication authentication = createAuthenticationFromMember(member);
-
-        // 5. 새 액세스 토큰 생성
+        // 4. 새 액세스 토큰 발급
         return jwtTokenProvider.createAccessToken(authentication);
     }
 
@@ -106,46 +124,6 @@ public class UserAuthenticationService {
         securityTokenManager.revokeAllTokensExcept(memberId, currentRefreshToken);
     }
 
-    /**
-     * 사용자 인증 (이메일/비밀번호 검증)
-     */
-    private Member authenticateUser(String email, String password) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, email));
-
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new AuthException(AuthErrorCode.INVALID_PASSWORD);
-        }
-
-        validateUserStatus(member);
-
-        return member;
-    }
-
-    /**
-     * 사용자 상태 검증 (활성/비활성/차단 등)
-     */
-    private void validateUserStatus(Member member) {
-        if (member.isDeleted()) {
-            throw new AuthException(AuthErrorCode.USER_DELETED);
-        }
-
-        if (member.getIsBanned()) {
-            throw new AuthException(AuthErrorCode.USER_BANNED);
-        }
-    }
-
-    /**
-     * Member 엔티티로부터 Authentication 객체 생성
-     */
-    private Authentication createAuthenticationFromMember(Member member) {
-        CustomUserDetails userDetails = new CustomUserDetails(member);
-        return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
-        );
-    }
 
     /**
      * 액세스 토큰과 리프레시 토큰 쿠키를 포함하는 응답 DTO
