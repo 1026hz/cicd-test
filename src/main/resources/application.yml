@@ -2,10 +2,10 @@ spring:
   application:
     name : 22-tenten-be
   datasource:
-    url: jdbc:mariadb://localhost:3306/kakaobase?serverTimezone=UTC&characterEncoding=UTF-8
+    url: ${MYSQL_URL}
     username: root
-    password: ''  # 비밀번호는 XAMPP 기본값 (빈칸)
-    driver-class-name: org.mariadb.jdbc.Driver
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
@@ -61,3 +61,14 @@ logging:
   level:
     com.amazonaws.util.EC2MetadataUtils: ERROR # EC2 메타데이터 관련 로그 수준 조정
     com.amazonaws.services.s3: INFO            # S3 서비스 관련 로그 수준
+    com.kakaobase.snsapp.global.security: DEBUG
+    com.kakaobase.snsapp.domain.auth: DEBUG
+    com.kakaobase.snsapp.domain.posts: DEBUG
+    org.springframework.security: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
+    url: /v3/api-docs

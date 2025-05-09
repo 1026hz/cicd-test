@@ -7,11 +7,15 @@ import com.kakaobase.snsapp.domain.members.exception.MemberErrorCode;
 import com.kakaobase.snsapp.domain.members.exception.MemberException;
 import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
-import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스입니다.
@@ -50,5 +54,117 @@ public class MemberService {
         memberRepository.save(member);
 
         log.info("회원가입 완료: {} (ID: {})", request.email(), member.getId());
+    }
+
+    /**
+     * 회원 ID로 회원 정보를 조회합니다.
+     *
+     * @param memberId 회원 ID
+     * @return 회원 정보 (닉네임, 프로필 이미지)
+     * @throws MemberException 회원을 찾을 수 없는 경우
+     */
+    @Transactional(readOnly = true)
+    public Map<String, String> getMemberInfo(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND, "memberId"));
+
+        Map<String, String> memberInfo = new HashMap<>();
+        memberInfo.put("nickname", member.getNickname());
+        memberInfo.put("imageUrl", member.getProfileImgUrl());
+
+        return memberInfo;
+    }
+
+    /**
+     * 여러 회원 ID에 대한 회원 정보를 일괄 조회합니다.
+     *
+     * @param memberIds 회원 ID 목록
+     * @return 회원 ID를 키로 하고 회원 정보(닉네임, 프로필 이미지)를 값으로 하는 맵
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Map<String, String>> getMemberInfoMapByIds(List<Long> memberIds) {
+        List<Member> members = memberRepository.findAllByIdIn(memberIds);
+
+        return members.stream()
+                .collect(Collectors.toMap(
+                        Member::getId,
+                        member -> {
+                            Map<String, String> info = new HashMap<>();
+                            info.put("nickname", member.getNickname());
+                            info.put("imageUrl", member.getProfileImgUrl());
+                            return info;
+                        }
+                ));
+    }
+
+    /**
+     * 닉네임으로 회원을 검색합니다.
+     *
+     * @param nickname 검색할 닉네임 (부분 일치)
+     * @param limit 최대 검색 결과 수
+     * @return 검색된 회원 ID 목록
+     */
+    @Transactional(readOnly = true)
+    public List<Long> searchMembersByNickname(String nickname, int limit) {
+        return memberRepository.findByNicknameContainingLimit(nickname, limit)
+                .stream()
+                .map(Member::getId)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 닉네임으로 회원을 조회합니다.
+     *
+     * @param nickname 닉네임 (정확히 일치)
+     * @return 회원 ID (없으면 null)
+     */
+    @Transactional(readOnly = true)
+    public Long findIdByNickname(String nickname) {
+        return memberRepository.findByNickname(nickname)
+                .map(Member::getId)
+                .orElse(null);
+    }
+
+    /**
+     * 여러 닉네임에 대한 회원 ID를 일괄 조회합니다.
+     *
+     * @param nicknames 닉네임 목록
+     * @return 닉네임을 키로 하고 회원 ID를 값으로 하는 맵
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Long> getMemberIdsByNicknames(List<String> nicknames) {
+        List<Member> members = memberRepository.findAllByNicknameIn(nicknames);
+
+        return members.stream()
+                .collect(Collectors.toMap(
+                        Member::getNickname,
+                        Member::getId
+                ));
+    }
+
+    /**
+     * 회원의 className(기수)을 조회합니다.
+     *
+     * @param memberId 회원 ID
+     * @return 회원의 className
+     * @throws MemberException 회원을 찾을 수 없는 경우
+     */
+    @Transactional(readOnly = true)
+    public String getMemberClassName(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND, "memberId"));
+
+        return member.getClassName();
+    }
+
+    /**
+     * 회원이 존재하는지 확인합니다.
+     *
+     * @param memberId 회원 ID
+     * @return 존재 여부
+     */
+    @Transactional(readOnly = true)
+    public boolean existsById(Long memberId) {
+        return memberRepository.existsById(memberId);
     }
 }

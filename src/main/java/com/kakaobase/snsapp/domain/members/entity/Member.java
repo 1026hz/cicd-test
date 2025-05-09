@@ -9,7 +9,7 @@ import org.hibernate.annotations.*;
 
 @Entity
 @Table(
-        name = "member",
+        name = "members",
         indexes = {
                 @Index(name = "idx_email_not_deleted", columnList = "email, deleted_at"),
                 @Index(name = "idx_nickname_not_deleted", columnList = "nickname, deleted_at"),
