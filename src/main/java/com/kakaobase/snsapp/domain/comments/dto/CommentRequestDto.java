@@ -76,22 +76,30 @@ public class CommentRequestDto {
     }
 
     /**
-     * 댓글 좋아요 요청 DTO
+     * 댓글 신고 요청 DTO (V2에서 구현 예정)
      */
-    @Schema(description = "댓글 좋아요 요청 DTO")
-    public record CommentLikeRequest(
-            @Schema(description = "좋아요를 누를 댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "댓글 신고 요청 DTO")
+    public record CommentReportRequest(
+            @Schema(description = "신고할 댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
             @NotNull(message = "댓글 ID는 필수입니다.")
-            Long commentId
+            Long commentId,
+
+            @Schema(description = "신고 사유", example = "스팸 또는 광고 내용", requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotBlank(message = "신고 사유는 필수입니다.")
+            String reason
     ) {}
 
     /**
-     * 대댓글 좋아요 요청 DTO
+     * 대댓글 신고 요청 DTO (V2에서 구현 예정)
      */
-    @Schema(description = "대댓글 좋아요 요청 DTO")
-    public record RecommentLikeRequest(
-            @Schema(description = "좋아요를 누를 대댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "대댓글 신고 요청 DTO")
+    public record RecommentReportRequest(
+            @Schema(description = "신고할 대댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
             @NotNull(message = "대댓글 ID는 필수입니다.")
-            Long recommentId
+            Long recommentId,
+
+            @Schema(description = "신고 사유", example = "스팸 또는 광고 내용", requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotBlank(message = "신고 사유는 필수입니다.")
+            String reason
     ) {}
 }

@@ -28,9 +28,14 @@ public class CommentResponseDto {
             @Schema(description = "회원 프로필 이미지 URL", example = "https://cdn.service.com/img1.jpg", nullable = true)
             String profile_image,
 
-            @Schema(description = "팔로우 여부", example = "false")
+            @Schema(description = "팔로우 여부 (V2에서 구현)", example = "false")
             boolean is_followed
-    ) {}
+    ) {
+        // 팔로우 정보 없이 생성하는 생성자 추가 (V2 전까지 임시로 사용)
+        public UserInfo(Long id, String nickname, String profile_image) {
+            this(id, nickname, profile_image, false);  // 팔로우 여부는 항상 false로 설정
+        }
+    }
 
     /**
      * 대댓글 정보 DTO
@@ -83,10 +88,7 @@ public class CommentResponseDto {
             boolean is_mine,
 
             @Schema(description = "좋아요 여부", example = "false")
-            boolean is_liked,
-
-            @Schema(description = "대댓글 목록", nullable = true)
-            List<RecommentInfo> recomments
+            boolean is_liked
     ) {}
 
     /**

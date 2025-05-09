@@ -11,7 +11,6 @@ import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,8 +66,9 @@ public class CommentConverter {
         CommentResponseDto.UserInfo userInfo = createUserInfo(
                 comment.getMember().getId(),
                 comment.getMember().getNickname(),
-                comment.getMember().getProfileImgUrl(),
-                false
+                comment.getMember().getProfileImgUrl()
+                // 팔로우 기능은 V2에서 구현 예정
+                // false
         );
 
         return new CommentResponseDto.CreateCommentResponse(
@@ -89,8 +89,9 @@ public class CommentConverter {
         CommentResponseDto.UserInfo userInfo = createUserInfo(
                 recomment.getMember().getId(),
                 recomment.getMember().getNickname(),
-                recomment.getMember().getProfileImgUrl(),
-                false
+                recomment.getMember().getProfileImgUrl()
+                // 팔로우 기능은 V2에서 구현 예정
+                // false
         );
 
         return new CommentResponseDto.CreateCommentResponse(
@@ -107,7 +108,6 @@ public class CommentConverter {
      * @param comment 댓글 엔티티
      * @param currentMemberId 현재 로그인한 회원 ID
      * @param likedCommentIds 좋아요 누른 댓글 ID 목록
-     * @param followedMemberIds 팔로우한 회원 ID 목록
      * @param recomments 대댓글 목록 (있는 경우)
      * @param likedRecommentIds 좋아요 누른 대댓글 ID 목록
      * @return 댓글 상세 정보 DTO
@@ -115,30 +115,18 @@ public class CommentConverter {
     public CommentResponseDto.CommentInfo toCommentInfo(
             Comment comment,
             Long currentMemberId,
-            Set<Long> likedCommentIds,
-            Set<Long> followedMemberIds,
-            List<Recomment> recomments,
-            Set<Long> likedRecommentIds
+            Set<Long> likedCommentIds
+            // 팔로우 기능은 V2에서 구현 예정
+            // Set<Long> followedMemberIds,
     ) {
         CommentResponseDto.UserInfo userInfo = createUserInfo(
                 comment.getMember().getId(),
                 comment.getMember().getNickname(),
-                comment.getMember().getProfileImgUrl(),
-                followedMemberIds != null && followedMemberIds.contains(comment.getMember().getId())
+                comment.getMember().getProfileImgUrl()
+                // 팔로우 기능은 V2에서 구현 예정
+                // followedMemberIds != null && followedMemberIds.contains(comment.getMember().getId())
         );
 
-        // 대댓글 목록 변환 (있는 경우)
-        List<CommentResponseDto.RecommentInfo> recommentInfos = Collections.emptyList();
-        if (recomments != null && !recomments.isEmpty()) {
-            recommentInfos = recomments.stream()
-                    .map(recomment -> toRecommentInfo(
-                            recomment,
-                            currentMemberId,
-                            likedRecommentIds,
-                            followedMemberIds
-                    ))
-                    .collect(Collectors.toList());
-        }
 
         return new CommentResponseDto.CommentInfo(
                 comment.getId(),
@@ -147,53 +135,15 @@ public class CommentConverter {
                 comment.getCreatedAt(),
                 comment.getLikeCount(),
                 comment.getMember().getId().equals(currentMemberId),
-                likedCommentIds != null && likedCommentIds.contains(comment.getId()),
-                recommentInfos
+                likedCommentIds != null && likedCommentIds.contains(comment.getId())
         );
     }
-
-    /**
-     * 대댓글 엔티티를 대댓글 상세 정보 DTO로 변환
-     *
-     * @param recomment 대댓글 엔티티
-     * @param currentMemberId 현재 로그인한 회원 ID
-     * @param likedRecommentIds 좋아요 누른 대댓글 ID 목록
-     * @param followedMemberIds 팔로우한 회원 ID 목록
-     * @return 대댓글 상세 정보 DTO
-     */
-    public CommentResponseDto.RecommentInfo toRecommentInfo(
-            Recomment recomment,
-            Long currentMemberId,
-            Set<Long> likedRecommentIds,
-            Set<Long> followedMemberIds
-    ) {
-        CommentResponseDto.UserInfo userInfo = createUserInfo(
-                recomment.getMember().getId(),
-                recomment.getMember().getNickname(),
-                recomment.getMember().getProfileImgUrl(),
-                followedMemberIds != null && followedMemberIds.contains(recomment.getMember().getId())
-        );
-
-        return new CommentResponseDto.RecommentInfo(
-                recomment.getId(),
-                userInfo,
-                recomment.getContent(),
-                recomment.getCreatedAt(),
-                recomment.getLikeCount(),
-                recomment.getMember().getId().equals(currentMemberId),
-                likedRecommentIds != null && likedRecommentIds.contains(recomment.getId())
-        );
-    }
-
     /**
      * 댓글 목록을 댓글 목록 응답 DTO로 변환
      *
      * @param comments 댓글 목록
      * @param currentMemberId 현재 로그인한 회원 ID
      * @param likedCommentIds 좋아요 누른 댓글 ID 목록
-     * @param followedMemberIds 팔로우한 회원 ID 목록
-     * @param recommentsMap 댓글별 대댓글 목록 맵
-     * @param likedRecommentIds 좋아요 누른 대댓글 ID 목록
      * @param nextCursor 다음 페이지 커서
      * @return 댓글 목록 응답 DTO
      */
@@ -201,23 +151,14 @@ public class CommentConverter {
             List<Comment> comments,
             Long currentMemberId,
             Set<Long> likedCommentIds,
-            Set<Long> followedMemberIds,
-            java.util.Map<Long, List<Recomment>> recommentsMap,
-            Set<Long> likedRecommentIds,
             Long nextCursor
     ) {
         List<CommentResponseDto.CommentInfo> commentInfos = comments.stream()
-                .map(comment -> {
-                    List<Recomment> recommentList = recommentsMap.getOrDefault(comment.getId(), Collections.emptyList());
-                    return toCommentInfo(
-                            comment,
-                            currentMemberId,
-                            likedCommentIds,
-                            followedMemberIds,
-                            recommentList,
-                            likedRecommentIds
-                    );
-                })
+                .map(comment -> toCommentInfo(
+                        comment,
+                        currentMemberId,
+                        likedCommentIds
+                ))
                 .collect(Collectors.toList());
 
         return new CommentResponseDto.CommentListResponse(
@@ -233,7 +174,6 @@ public class CommentConverter {
      * @param recomments 대댓글 목록
      * @param currentMemberId 현재 로그인한 회원 ID
      * @param likedRecommentIds 좋아요 누른 대댓글 ID 목록
-     * @param followedMemberIds 팔로우한 회원 ID 목록
      * @param nextCursor 다음 페이지 커서
      * @return 대댓글 목록 응답 DTO
      */
@@ -241,15 +181,17 @@ public class CommentConverter {
             List<Recomment> recomments,
             Long currentMemberId,
             Set<Long> likedRecommentIds,
-            Set<Long> followedMemberIds,
+            // 팔로우 기능은 V2에서 구현 예정
+            // Set<Long> followedMemberIds,
             Long nextCursor
     ) {
         List<CommentResponseDto.RecommentInfo> recommentInfos = recomments.stream()
                 .map(recomment -> toRecommentInfo(
                         recomment,
                         currentMemberId,
-                        likedRecommentIds,
-                        followedMemberIds
+                        likedRecommentIds
+                        // 팔로우 기능은 V2에서 구현 예정
+                        // followedMemberIds
                 ))
                 .collect(Collectors.toList());
 
@@ -259,6 +201,42 @@ public class CommentConverter {
                 nextCursor
         );
     }
+
+
+    /**
+     * 대댓글 엔티티를 대댓글 상세 정보 DTO로 변환
+     *
+     * @param recomment 대댓글 엔티티
+     * @param currentMemberId 현재 로그인한 회원 ID
+     * @param likedRecommentIds 좋아요 누른 대댓글 ID 목록
+     * @return 대댓글 상세 정보 DTO
+     */
+    public CommentResponseDto.RecommentInfo toRecommentInfo(
+            Recomment recomment,
+            Long currentMemberId,
+            Set<Long> likedRecommentIds
+            // 팔로우 기능은 V2에서 구현 예정
+            // Set<Long> followedMemberIds
+    ) {
+        CommentResponseDto.UserInfo userInfo = createUserInfo(
+                recomment.getMember().getId(),
+                recomment.getMember().getNickname(),
+                recomment.getMember().getProfileImgUrl()
+                // 팔로우 기능은 V2에서 구현 예정
+                // followedMemberIds != null && followedMemberIds.contains(recomment.getMember().getId())
+        );
+
+        return new CommentResponseDto.RecommentInfo(
+                recomment.getId(),
+                userInfo,
+                recomment.getContent(),
+                recomment.getCreatedAt(),
+                recomment.getLikeCount(),
+                recomment.getMember().getId().equals(currentMemberId),
+                likedRecommentIds != null && likedRecommentIds.contains(recomment.getId())
+        );
+    }
+
 
     /**
      * 단순 메시지 응답 DTO 생성
@@ -272,9 +250,10 @@ public class CommentConverter {
 
     /**
      * 유저 정보 DTO 생성 (중복 코드 제거를 위한 헬퍼 메서드)
+     * V2에서 팔로우 기능 구현 시 isFollowed 파라미터 추가 예정
      */
-    private CommentResponseDto.UserInfo createUserInfo(Long id, String nickname, String profileImage, boolean isFollowed) {
-        return new CommentResponseDto.UserInfo(id, nickname, profileImage, isFollowed);
+    public CommentResponseDto.UserInfo createUserInfo(Long id, String nickname, String profileImage) {
+        return new CommentResponseDto.UserInfo(id, nickname, profileImage);
     }
 
     /**
