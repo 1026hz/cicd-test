@@ -128,4 +128,37 @@ public interface RecommentRepository extends JpaRepository<Recomment, Long> {
     List<Recomment> findRecentByCommentId(
             @Param("commentId") Long commentId,
             @Param("limit") int limit);
+
+    /**
+     * 특정 댓글의 대댓글을 생성 시간 오름차순으로 조회합니다.
+     * 삭제되지 않은 대댓글만 조회합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param pageable 페이지네이션 정보
+     * @return 대댓글 목록 (페이지네이션 적용)
+     */
+    @Query("SELECT r FROM Recomment r WHERE r.comment.id = :commentId AND r.deletedAt IS NULL ORDER BY r.createdAt ASC")
+    Page<Recomment> findByCommentIdOrderByCreatedAtAsc(@Param("commentId") Long commentId, Pageable pageable);
+
+    /**
+     * 특정 댓글의 대댓글을 생성 시간 오름차순으로 조회합니다.
+     * ID가 특정 값보다 큰 대댓글들을 조회합니다(커서 기반 페이징).
+     * 삭제되지 않은 대댓글만 조회합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param recommentId 커서(특정 대댓글 ID)
+     * @param limit 조회할 최대 대댓글 수
+     * @return 대댓글 목록
+     */
+    @Query(value = "SELECT r.* FROM recomments r " +
+            "WHERE r.comment_id = :commentId " +
+            "AND r.id > :recommentId " +
+            "AND r.deleted_at IS NULL " +
+            "ORDER BY r.created_at ASC " +
+            "LIMIT :limit",
+            nativeQuery = true)
+    List<Recomment> findByCommentIdAndIdGreaterThanOrderByCreatedAtAsc(
+            @Param("commentId") Long commentId,
+            @Param("recommentId") Long recommentId,
+            @Param("limit") int limit);
 }

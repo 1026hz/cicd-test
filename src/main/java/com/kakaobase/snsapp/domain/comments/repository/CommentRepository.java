@@ -136,11 +136,35 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     long countByPostIdAndDeletedAtIsNull(@Param("postId") Long postId);
 
     /**
-     * 특정 게시글의 모든 댓글을 찾습니다.
-     * 대댓글도 포함됩니다.
+     * 특정 게시글의 댓글을 페이지네이션하여 조회합니다.
+     * 삭제되지 않은 댓글만 조회합니다.
      *
      * @param postId 게시글 ID
+     * @param pageable 페이지네이션 정보
+     * @return 댓글 목록 (페이지네이션 적용)
+     */
+    @Query("SELECT c FROM Comment c WHERE c.post.id = :postId AND c.deletedAt IS NULL")
+    Page<Comment> findByPostId(@Param("postId") Long postId, Pageable pageable);
+
+    /**
+     * 특정 게시글의 댓글을 커서 기반으로 조회합니다.
+     * ID가 특정 값보다 작은 댓글들을 ID 내림차순으로 조회합니다.
+     * 삭제되지 않은 댓글만 조회합니다.
+     *
+     * @param postId 게시글 ID
+     * @param commentId 커서(특정 댓글 ID)
+     * @param limit 조회할 최대 댓글 수
      * @return 댓글 목록
      */
-    List<Comment> findByPostId(Long postId);
+    @Query(value = "SELECT c.* FROM comments c " +
+            "WHERE c.post_id = :postId " +
+            "AND c.id < :commentId " +
+            "AND c.deleted_at IS NULL " +
+            "ORDER BY c.id DESC " +
+            "LIMIT :limit",
+            nativeQuery = true)
+    List<Comment> findByPostIdAndIdLessThanOrderByIdDesc(
+            @Param("postId") Long postId,
+            @Param("commentId") Long commentId,
+            @Param("limit") int limit);
 }

@@ -1,13 +1,9 @@
 package com.kakaobase.snsapp.domain.comments.controller;
 
-import com.kakaobase.snsapp.domain.comments.converter.CommentConverter;
-import com.kakaobase.snsapp.domain.comments.converter.LikeConverter;
 import com.kakaobase.snsapp.domain.comments.dto.CommentRequestDto;
 import com.kakaobase.snsapp.domain.comments.dto.CommentResponseDto;
 import com.kakaobase.snsapp.domain.comments.service.CommentService;
-import com.kakaobase.snsapp.domain.comments.service.LikeService;
-import com.kakaobase.snsapp.domain.members.entity.Member;
-import com.kakaobase.snsapp.domain.members.service.MemberService;
+import com.kakaobase.snsapp.domain.comments.service.CommentLikeService;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -33,18 +28,30 @@ import java.security.Principal;
 public class CommentController {
 
     private final CommentService commentService;
-    private final LikeService likeService;
-    private final MemberService memberService;
+    private final CommentLikeService commentLikeService;
 
     /**
-     * 현재 로그인한 사용자의 Member 객체를 반환
+     * 현재 로그인한 사용자의 ID를 반환
      *
-     * @return 현재 로그인한 사용자의 Member 객체
+     * @return 현재 로그인한 사용자의 ID
      */
-    private Member getCurrentMember() {
+    private Long getCurrentMemberId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return memberService.getMemberByUsername(username);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
+        // UserDetails를 구현한 Principal에서 ID 추출
+        if (authentication.getPrincipal() instanceof UserPrincipal) {
+            return ((UserPrincipal) authentication.getPrincipal()).getMemberId();
+        }
+
+        // JWT 토큰 기반 인증의 경우
+        try {
+            return Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new UnauthorizedException("유효하지 않은 사용자 ID입니다.");
+        }
     }
 
     /**
@@ -67,8 +74,8 @@ public class CommentController {
             @PathVariable Long postId,
             @Valid @RequestBody CommentRequestDto.CreateCommentRequest request
     ) {
-        Member member = getCurrentMember();
-        CommentResponseDto.CreateCommentResponse response = commentService.createComment(member, postId, request);
+        Long memberId = getCurrentMemberId();
+        CommentResponseDto.CreateCommentResponse response = commentService.createComment(memberId, postId, request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(CustomResponse.success("댓글이 작성되었습니다.", response));
@@ -96,8 +103,8 @@ public class CommentController {
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequestDto.UpdateCommentRequest request
     ) {
-        Member member = getCurrentMember();
-        commentService.updateComment(member.getId(), commentId, request);
+        Long memberId = getCurrentMemberId();
+        commentService.updateComment(memberId, commentId, request);
         return ResponseEntity.ok(CustomResponse.success("댓글이 수정되었습니다."));
     }
 
@@ -120,8 +127,8 @@ public class CommentController {
     public ResponseEntity<CustomResponse<CommentResponseDto.MessageResponse>> deleteComment(
             @PathVariable Long commentId
     ) {
-        Member member = getCurrentMember();
-        commentService.deleteComment(member.getId(), commentId);
+        Long memberId = getCurrentMemberId();
+        commentService.deleteComment(memberId, commentId);
         return ResponseEntity.ok(CustomResponse.success("댓글이 삭제되었습니다."));
     }
 
@@ -144,9 +151,9 @@ public class CommentController {
             @Parameter(description = "한 번에 불러올 댓글 수 (기본값: 12)") @RequestParam(required = false) Integer limit,
             @Parameter(description = "페이지네이션 커서 (이전 응답의 next_cursor)") @RequestParam(required = false) Long cursor
     ) {
-        Member member = getCurrentMember();
+        Long memberId = getCurrentMemberId();
         CommentRequestDto.CommentPageRequest pageRequest = new CommentRequestDto.CommentPageRequest(limit, cursor);
-        CommentResponseDto.CommentListResponse response = commentService.getCommentsByPostId(member.getId(), postId, pageRequest);
+        CommentResponseDto.CommentListResponse response = commentService.getCommentsByPostId(memberId, postId, pageRequest);
         return ResponseEntity.ok(CustomResponse.success("댓글 목록을 조회했습니다.", response));
     }
 
@@ -169,9 +176,9 @@ public class CommentController {
             @Parameter(description = "한 번에 불러올 대댓글 수 (기본값: 12)") @RequestParam(required = false) Integer limit,
             @Parameter(description = "페이지네이션 커서 (이전 응답의 next_cursor)") @RequestParam(required = false) Long cursor
     ) {
-        Member member = getCurrentMember();
+        Long memberId = getCurrentMemberId();
         CommentRequestDto.RecommentPageRequest pageRequest = new CommentRequestDto.RecommentPageRequest(limit, cursor);
-        CommentResponseDto.RecommentListResponse response = commentService.getRecommentsByCommentId(member.getId(), commentId, pageRequest);
+        CommentResponseDto.RecommentListResponse response = commentService.getRecommentsByCommentId(memberId, commentId, pageRequest);
         return ResponseEntity.ok(CustomResponse.success("대댓글 목록을 조회했습니다.", response));
     }
 
@@ -192,8 +199,8 @@ public class CommentController {
     public ResponseEntity<CustomResponse<CommentResponseDto.CommentLikeResponse>> toggleCommentLike(
             @PathVariable Long commentId
     ) {
-        Member member = getCurrentMember();
-        CommentResponseDto.CommentLikeResponse response = likeService.toggleCommentLike(member.getId(), commentId);
+        Long memberId = getCurrentMemberId();
+        CommentResponseDto.CommentLikeResponse response = commentLikeService.toggleCommentLike(memberId, commentId);
         String message = response.liked() ? "댓글에 좋아요를 눌렀습니다." : "댓글 좋아요를 취소했습니다.";
         return ResponseEntity.ok(CustomResponse.success(message, response));
     }
@@ -215,8 +222,8 @@ public class CommentController {
     public ResponseEntity<CustomResponse<CommentResponseDto.RecommentLikeResponse>> toggleRecommentLike(
             @PathVariable Long recommentId
     ) {
-        Member member = getCurrentMember();
-        CommentResponseDto.RecommentLikeResponse response = likeService.toggleRecommentLike(member.getId(), recommentId);
+        Long memberId = getCurrentMemberId();
+        CommentResponseDto.RecommentLikeResponse response = commentLikeService.toggleRecommentLike(memberId, recommentId);
         String message = response.liked() ? "대댓글에 좋아요를 눌렀습니다." : "대댓글 좋아요를 취소했습니다.";
         return ResponseEntity.ok(CustomResponse.success(message, response));
     }
