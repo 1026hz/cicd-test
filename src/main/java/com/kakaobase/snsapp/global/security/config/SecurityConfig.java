@@ -1,7 +1,5 @@
 package com.kakaobase.snsapp.global.security.config;
 
-import com.kakaobase.snsapp.global.security.config.CustomAccessDeniedHandler;
-import com.kakaobase.snsapp.global.security.config.CustomAuthenticationEntryPoint;
 import com.kakaobase.snsapp.global.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

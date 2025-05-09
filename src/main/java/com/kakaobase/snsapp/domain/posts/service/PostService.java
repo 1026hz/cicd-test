@@ -147,23 +147,23 @@ public class PostService {
         return memberService.getMemberInfoMapByIds(memberIds);
     }
 
-    /**
-     * 게시글에 좋아요한 사용자 목록을 조회합니다.
-     *
-     * @param posts 게시글 목록
-     * @param limit 조회할 사용자 수 제한
-     * @return 게시글 ID를 키로 하고 좋아요한 사용자 닉네임 목록을 값으로 하는 맵
-     */
-    public Map<Long, List<String>> getWhoLikedPosts(List<Post> posts, int limit) {
-        Map<Long, List<String>> result = new HashMap<>();
-
-        for (Post post : posts) {
-            List<String> whoLiked = postLikeService.findWhoLikedPost(post.getId(), limit);
-            result.put(post.getId(), whoLiked);
-        }
-
-        return result;
-    }
+//    /**
+//     * 게시글에 좋아요한 사용자 목록을 조회합니다.
+//     *
+//     * @param posts 게시글 목록
+//     * @param limit 조회할 사용자 수 제한
+//     * @return 게시글 ID를 키로 하고 좋아요한 사용자 닉네임 목록을 값으로 하는 맵
+//     */
+//    public Map<Long, List<String>> getWhoLikedPosts(List<Post> posts, int limit) {
+//        Map<Long, List<String>> result = new HashMap<>();
+//
+//        for (Post post : posts) {
+//            List<String> whoLiked = postLikeService.findWhoLikedPost(post.getId(), limit);
+//            result.put(post.getId(), whoLiked);
+//        }
+//
+//        return result;
+//    }
 
 //    /**
 //     * 사용자가 팔로우하는 회원 ID 목록을 조회합니다.
@@ -187,7 +187,7 @@ public class PostService {
 //    }
 //
 //    /**
-//     * 유튜브 요약 내용을 업데이트합니다.
+//     * 유튜브 요약 내용을 업데이트합니다.`
 //     *
 //     * @param postId 게시글 ID
 //     * @param summary 요약 내용

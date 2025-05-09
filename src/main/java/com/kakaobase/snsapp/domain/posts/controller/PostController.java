@@ -60,11 +60,11 @@ public class PostController {
             throw new PostException(GeneralErrorCode.INVALID_QUERY_PARAMETER, "limit", "limit는 1 이상이어야 합니다.");
         }
 
-//        // 사용자 인증 정보 확인
-//        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
-//            memberId = Long.parseLong(authentication.getName());
-//            followingIds = postService.getFollowingIds(memberId);
-//        }
+        // 사용자 인증 정보 확인
+        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
+            memberId = Long.parseLong(authentication.getName());
+            //followingIds = postService.getFollowingIds(memberId);
+        }
 
         // 게시판 타입 변환
         Post.BoardType boardType = PostConverter.toBoardType(postType);
@@ -79,11 +79,11 @@ public class PostController {
                 : List.of();
 
         // 게시글별 좋아요한 사용자 목록 조회 (최대 2명)
-        Map<Long, List<String>> whoLikedMap = postService.getWhoLikedPosts(posts, 2);
+        //Map<Long, List<String>> whoLikedMap = postService.getWhoLikedPosts(posts, 2);
 
         // 응답 생성
         PostResponseDto.PostListResponse response = PostConverter.toPostListResponse(
-                posts, memberInfoMap, likedPostIds, followingIds, memberId, whoLikedMap);
+                posts, memberInfoMap, likedPostIds, followingIds, memberId);
 
         return ResponseEntity.ok(response);
     }

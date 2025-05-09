@@ -125,29 +125,29 @@ public class PostLikeService {
         return postLikeRepository.findPostIdsByMemberIdAndPostIdIn(memberId, postIds);
     }
 
-    /**
-     * 게시글에 좋아요한 사용자 닉네임 목록을 조회합니다.
-     *
-     * @param postId 게시글 ID
-     * @param limit 최대 조회 수
-     * @return 좋아요한 사용자의 닉네임 목록
-     */
-    public List<String> findWhoLikedPost(Long postId, int limit) {
-        List<Long> memberIds = postLikeRepository.findTopNMemberIdsByPostId(postId, limit);
-
-        if (memberIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 회원 정보 조회
-        Map<Long, Map<String, String>> memberInfoMap = memberService.getMemberInfoMapByIds(memberIds);
-
-        // 닉네임만 추출하여 반환
-        return memberIds.stream()
-                .map(memberId -> memberInfoMap.getOrDefault(memberId, Map.of("nickname", "알 수 없음")))
-                .map(info -> info.get("nickname"))
-                .collect(Collectors.toList());
-    }
+//    /**
+//     * 게시글에 좋아요한 사용자 닉네임 목록을 조회합니다.
+//     *
+//     * @param postId 게시글 ID
+//     * @param limit 최대 조회 수
+//     * @return 좋아요한 사용자의 닉네임 목록
+//     */
+//    public List<String> findWhoLikedPost(Long postId, int limit) {
+//        List<Long> memberIds = postLikeRepository.findTopMemberIdsByPostId(postId, limit);
+//
+//        if (memberIds.isEmpty()) {
+//            return new ArrayList<>();
+//        }
+//
+//        // 회원 정보 조회
+//        Map<Long, Map<String, String>> memberInfoMap = memberService.getMemberInfoMapByIds(memberIds);
+//
+//        // 닉네임만 추출하여 반환
+//        return memberIds.stream()
+//                .map(memberId -> memberInfoMap.getOrDefault(memberId, Map.of("nickname", "알 수 없음")))
+//                .map(info -> info.get("nickname"))
+//                .collect(Collectors.toList());
+//    }
 
     /**
      * 게시글 삭제 시 연관된 좋아요를 일괄 삭제합니다.
