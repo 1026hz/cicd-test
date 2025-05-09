@@ -2,14 +2,21 @@ package com.kakaobase.snsapp.domain.members.entity;
 
 import com.kakaobase.snsapp.global.common.entity.BaseSoftDeletableEntity;
 import jakarta.persistence.*;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.*;
+
 
 @Entity
-@Table(name = "members")
+@Table(
+        name = "members",
+        indexes = {
+                @Index(name = "idx_email_not_deleted", columnList = "email, deleted_at"),
+                @Index(name = "idx_nickname_not_deleted", columnList = "nickname, deleted_at"),
+                @Index(name = "idx_role_not_deleted", columnList = "role, deleted_at")
+        }
+)
 @Getter
 @Builder
 @AllArgsConstructor

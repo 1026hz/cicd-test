@@ -2,6 +2,8 @@ package com.kakaobase.snsapp.domain.auth.controller;
 
 import com.kakaobase.snsapp.domain.auth.dto.AuthRequestDto;
 import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
+import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
+import com.kakaobase.snsapp.domain.auth.exception.AuthException;
 import com.kakaobase.snsapp.domain.auth.service.UserAuthenticationService;
 import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
@@ -105,6 +107,11 @@ public class AuthController {
 
         // 쿠키에서 리프레시 토큰 추출
         String refreshToken = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
+
+        // 리프레시 토큰이 없으면 예외 발생
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISSING);
+        }
 
         // 액세스 토큰 재발급
         String newAccessToken = userAuthenticationService.refreshAuthentication(refreshToken);
