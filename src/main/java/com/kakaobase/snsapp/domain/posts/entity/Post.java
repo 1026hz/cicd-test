@@ -27,7 +27,6 @@ import java.util.List;
         }
 )
 @Getter
-@RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -79,6 +78,7 @@ public class Post extends BaseSoftDeletableEntity {
     private Integer commentCount = 0;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PostImage> images = new ArrayList<>();
 
     public Post(Long memberId, BoardType boardType, String content) {
