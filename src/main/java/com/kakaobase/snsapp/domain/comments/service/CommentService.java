@@ -70,6 +70,9 @@ public class CommentService {
             // 대댓글 엔티티 생성 및 저장
             Recomment recomment = commentConverter.toRecommentEntity(parentComment, member, request);
             Recomment savedRecomment = recommentRepository.save(recomment);
+            
+            //부모 댓글 대댓글 카운트 증가
+            parentComment.increaseRecommentCount();
 
             log.info("대댓글 생성 완료: 대댓글 ID={}, 작성자 ID={}, 부모 댓글 ID={}",
                     savedRecomment.getId(), memberId, parentComment.getId());
@@ -80,6 +83,9 @@ public class CommentService {
         // 일반 댓글인 경우
         Comment comment = commentConverter.toCommentEntity(post, member, request);
         Comment savedComment = commentRepository.save(comment);
+        
+        //게시글의 댓글 수 추가
+        post.increaseCommentCount();
 
         log.info("댓글 생성 완료: 댓글 ID={}, 작성자 ID={}, 게시글 ID={}",
                 savedComment.getId(), memberId, postId);
