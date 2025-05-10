@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.posts.converter;
 
+import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostResponseDto;
 import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.domain.posts.entity.PostImage;
@@ -11,6 +12,27 @@ import java.util.stream.Collectors;
  * Post 도메인의 Entity와 DTO 간 변환을 담당하는 Converter 클래스
  */
 public class PostConverter {
+
+    /**
+     * 게시글 생성 요청 DTO를 Post 엔티티로 변환합니다.
+     *
+     * @param requestDto 게시글 생성 요청 DTO
+     * @param memberId 작성자 ID
+     * @param boardType 게시판 타입
+     * @return 생성된 Post 엔티티
+     */
+    public static Post toPost(
+            PostRequestDto.PostCreateRequestDto requestDto,
+            Long memberId,
+            Post.BoardType boardType) {
+
+        return Post.builder()
+                .memberId(memberId)
+                .boardType(boardType)
+                .content(requestDto.content())
+                .youtubeUrl(requestDto.youtube_url())
+                .build();
+    }
 
     /**
      * Post 엔티티를 상세 응답 DTO로 변환합니다.

@@ -2,9 +2,7 @@ package com.kakaobase.snsapp.domain.posts.entity;
 
 import com.kakaobase.snsapp.global.common.entity.BaseSoftDeletableEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -29,7 +27,10 @@ import java.util.List;
         }
 )
 @Getter
+@RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @SQLDelete(sql = "UPDATE posts SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @Where(clause = "deleted_at IS NULL")
 public class Post extends BaseSoftDeletableEntity {
@@ -70,30 +71,22 @@ public class Post extends BaseSoftDeletableEntity {
     private String youtubeSummary;
 
     @Column(name = "like_count", nullable = false)
-    private Integer likeCount;
+    @Builder.Default
+    private Integer likeCount = 0;
 
     @Column(name = "comment_count", nullable = false)
-    private Integer commentCount;
+    @Builder.Default
+    private Integer commentCount = 0;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostImage> images = new ArrayList<>();
 
-    /**
-     * 게시글 생성을 위한 생성자
-     *
-     * @param memberId 작성자 ID
-     * @param boardType 게시판 유형
-     * @param content 내용
-     * @param youtubeUrl 유튜브 URL
-     */
-    public Post(Long memberId, BoardType boardType, String content, String youtubeUrl) {
+    public Post(Long memberId, BoardType boardType, String content) {
         this.memberId = memberId;
         this.boardType = boardType;
         this.content = content;
-        this.youtubeUrl = youtubeUrl;
-        this.likeCount = 0;
-        this.commentCount = 0;
     }
+
 
     /**
      * 유튜브 요약 내용을 설정합니다.
