@@ -1,3 +1,4 @@
+// Comment.java
 package com.kakaobase.snsapp.domain.comments.entity;
 
 import com.kakaobase.snsapp.domain.members.entity.Member;
@@ -14,9 +15,9 @@ import java.util.List;
 /**
  * 댓글 정보를 담는 엔티티
  * <p>
- * 게시글에 달린 댓글과 대댓글 정보를 관리합니다.
+ * 게시글에 달린 댓글 정보를 관리합니다.
+ * 대댓글은 별도의 Recomment 엔티티에서 관리됩니다.
  * BaseSoftDeletableEntity를 상속받아 생성/수정/삭제 시간 정보를 관리합니다.
- * 자기 참조를 통해 댓글-대댓글 관계를 구현합니다.
  * </p>
  */
 @Entity
@@ -52,15 +53,11 @@ public class Comment extends BaseSoftDeletableEntity {
     @Column(name = "recomment_count", nullable = false)
     private int recommentCount = 0;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Comment parentComment;
-
-    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
-    private List<Comment> childComments = new ArrayList<>();
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL)
+    private List<Recomment> recomments = new ArrayList<>();
 
     /**
-     * 일반 댓글 생성을 위한 생성자
+     * 댓글 생성을 위한 생성자
      *
      * @param post 댓글이 작성될 게시글
      * @param member 댓글 작성자
@@ -70,24 +67,6 @@ public class Comment extends BaseSoftDeletableEntity {
         this.post = post;
         this.member = member;
         this.content = content;
-    }
-
-    /**
-     * 대댓글 생성을 위한 생성자
-     *
-     * @param post 댓글이 작성될 게시글
-     * @param member 댓글 작성자
-     * @param content 댓글 내용
-     * @param parentComment 부모 댓글 (대댓글의 대상이 되는 댓글)
-     */
-    public Comment(Post post, Member member, String content, Comment parentComment) {
-        this.post = post;
-        this.member = member;
-        this.content = content;
-        this.parentComment = parentComment;
-        if (parentComment != null) {
-            parentComment.increaseRecommentCount();
-        }
     }
 
     /**
@@ -129,15 +108,6 @@ public class Comment extends BaseSoftDeletableEntity {
         if (this.recommentCount > 0) {
             this.recommentCount--;
         }
-    }
-
-    /**
-     * 대댓글 여부 확인
-     *
-     * @return 대댓글이면 true, 일반 댓글이면 false
-     */
-    public boolean isRecomment() {
-        return this.parentComment != null;
     }
 
     /**
