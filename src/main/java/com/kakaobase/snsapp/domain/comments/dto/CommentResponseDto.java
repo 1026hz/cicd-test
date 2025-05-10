@@ -164,6 +164,16 @@ public class CommentResponseDto {
     ) {}
 
     /**
+     * 댓글 상세 조회 응답 DTO
+     */
+    @Schema(description = "댓글 상세 조회 응답")
+    public record CommentDetailResponse(
+            @Schema(description = "댓글 상세 정보")
+            CommentInfo data
+    ) {
+    }
+
+    /**
      * 기본 응답 메시지 DTO
      */
     @Schema(description = "기본 응답 메시지")

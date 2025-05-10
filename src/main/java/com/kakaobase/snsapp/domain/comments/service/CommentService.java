@@ -250,6 +250,47 @@ public class CommentService {
     }
 
     /**
+     * 댓글 상세 정보를 조회합니다.
+     *
+     * @param memberId 현재 로그인한 회원 ID
+     * @param commentId 조회할 댓글 ID
+     * @return 댓글 상세 응답 DTO
+     */
+    public CommentResponseDto.CommentDetailResponse getCommentDetail(Long memberId, Long commentId) {
+        // 댓글 조회
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+                .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId", "댓글을 찾을 수 없습니다."));
+
+        // 댓글 좋아요 여부 확인
+        boolean isLiked = commentRepository.existsCommentLike(commentId, memberId);
+
+        // 댓글 작성자 확인 (본인 작성 여부)
+        boolean isMine = comment.getMember().getId().equals(memberId);
+
+        // UserInfo 생성
+        Member commentAuthor = comment.getMember();
+        CommentResponseDto.UserInfo userInfo = new CommentResponseDto.UserInfo(
+                commentAuthor.getId(),
+                commentAuthor.getNickname(),
+                commentAuthor.getProfileImgUrl(),
+                false  // is_followed는 일단 false로 설정 (팔로우 서비스와 연동 필요)
+        );
+
+        // CommentInfo 생성
+        CommentResponseDto.CommentInfo commentInfo = new CommentResponseDto.CommentInfo(
+                comment.getId(),
+                userInfo,
+                comment.getContent(),
+                comment.getCreatedAt(),
+                comment.getLikeCount(),
+                isMine,
+                isLiked
+        );
+
+        return new CommentResponseDto.CommentDetailResponse(commentInfo);
+    }
+
+    /**
      * 댓글 ID로 댓글을 조회합니다.
      *
      * @param commentId 댓글 ID

@@ -70,6 +70,29 @@ public class CommentController {
     }
 
     /**
+     * 댓글 상세 조회 API
+     */
+    @GetMapping("/comments/{commentId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "댓글 상세 조회",
+            description = "특정 댓글의 상세 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "댓글 상세 조회 성공",
+                    content = @Content(schema = @Schema(implementation = CommentResponseDto.CommentDetailResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+    })
+    public ResponseEntity<CustomResponse<CommentResponseDto.CommentDetailResponse>> getCommentDetail(
+            @PathVariable Long commentId
+    ) {
+        Long memberId = getCurrentMemberId();
+        CommentResponseDto.CommentDetailResponse response = commentService.getCommentDetail(memberId, commentId);
+        return ResponseEntity.ok(CustomResponse.success("댓글을 성공적으로 불러왔습니다.", response));
+    }
+
+    /**
      * 댓글 삭제 API
      */
     @DeleteMapping("/comments/{commentId}")
