@@ -29,7 +29,7 @@ public class MemberConverter {
         // 기수명 변환
         Member.ClassName className;
         try {
-            className = Member.ClassName.valueOf(request.className());
+            className = Member.ClassName.valueOf(request.class_name());
         } catch (IllegalArgumentException e) {
             throw new CustomException(GeneralErrorCode.RESOURCE_NOT_FOUND, "class_name");
         }
@@ -41,7 +41,7 @@ public class MemberConverter {
                 .name(request.name())
                 .nickname(request.nickname())
                 .className(className)
-                .githubUrl(request.githubUrl())
+                .githubUrl(request.github_url())
                 .role(Member.Role.USER)
                 .isBanned(false)
                 .followerCount(0)
