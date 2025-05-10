@@ -1,15 +1,18 @@
 package com.kakaobase.snsapp.domain.posts.service;
 
 import com.kakaobase.snsapp.domain.members.service.MemberService;
+import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostResponseDto;
 import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.domain.posts.entity.PostImage;
+import com.kakaobase.snsapp.domain.posts.event.PostCreatedEvent;
 import com.kakaobase.snsapp.domain.posts.exception.PostErrorCode;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
 import com.kakaobase.snsapp.domain.posts.repository.PostRepository;
 import com.kakaobase.snsapp.global.common.s3.service.S3Service;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +36,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final S3Service s3Service;
     private final MemberService memberService;
-    private final YouTubeSummaryService youtubeSummaryService;  // 생성자 주입 필요
+    private final YouTubeSummaryService youtubeSummaryService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * 게시글을 생성합니다.
@@ -51,12 +55,7 @@ public class PostService {
         }
 
         // 게시글 엔티티 생성
-        Post post = new Post(
-                memberId,
-                boardType,
-                requestDto.content(),
-                requestDto.youtube_url()
-        );
+        Post post = PostConverter.toPost(requestDto, memberId, boardType);
 
         // 게시글 저장
         Post savedPost = postRepository.save(post);
@@ -66,6 +65,9 @@ public class PostService {
             PostImage postImage = new PostImage(savedPost, 0, requestDto.image_url());
             savedPost.addImage(postImage);
         }
+
+        // 게시글 생성 이벤트 발행
+        applicationEventPublisher.publishEvent(new PostCreatedEvent(savedPost.getId(), boardType, memberId));
 
         log.info("게시글 생성 완료: 게시글 ID={}, 작성자 ID={}, 게시판={}", savedPost.getId(), memberId, boardType);
         return savedPost;
