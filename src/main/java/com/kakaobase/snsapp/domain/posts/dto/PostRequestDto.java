@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.posts.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -82,4 +83,66 @@ public class PostRequestDto {
             @NotBlank(message = "MIME 타입은 필수입니다")
             String mime_type
     ) {}
+
+    /**
+     * AI 서버 YouTube 요약 요청 DTO
+     *
+     * <p>AI 서버에 YouTube 영상 요약을 요청할 때 사용하는 DTO입니다.</p>
+     *
+     * @param youtubeUrl YouTube 영상 URL
+     */
+    @Schema(description = "AI 서버 YouTube 요약 요청")
+    public record YouTubeAiRequest(
+            @Schema(description = "YouTube 영상 URL", example = "https://www.youtube.com/watch?v=VIDEO_ID", required = true)
+            @JsonProperty("youtube_url")
+            String youtubeUrl
+    ) {
+    }
+
+    /**
+     * AI 서버 YouTube 요약 응답 DTO
+     *
+     * <p>AI 서버로부터 YouTube 영상 요약 결과를 받을 때 사용하는 DTO입니다.</p>
+     *
+     * @param message 응답 메시지
+     * @param data 요약 데이터
+     */
+    @Schema(description = "AI 서버 YouTube 요약 응답")
+    public record YouTubeAiResponse(
+            @Schema(description = "응답 메시지", example = "YouTube 영상이 요약되었습니다.")
+            String message,
+
+            @Schema(description = "요약 데이터")
+            YouTubeAiData data
+    ) {
+        /**
+         * YouTube 요약 데이터
+         *
+         * @param summary 요약 내용
+         */
+        @Schema(description = "YouTube 요약 데이터")
+        public record YouTubeAiData(
+                @Schema(description = "요약 내용", example = "• 서울대 교수회가 중고교 통합과 수능 중복 응시를 포함한 교육 개혁안을 발표했습니다.\\n• 중등학교 6년제로 학재를 통합하고 초등 6년 과정은 소양 교육, 중등 6년 과정은 기초 교육 및 적성 탐색에 중점을 둬야 한다고 제안했습니다.\\n• 학생 선택권을 보장하기 위해 수능 시험을 연간 세 차례 실시하고 최고 점수나 평균 점수를 입시에 반영하는 방안을 제시했습니다.")
+                String summary
+        ) {
+        }
+    }
+
+    /**
+     * AI 서버 에러 응답 DTO
+     *
+     * <p>AI 서버에서 에러가 발생했을 때 받는 응답 DTO입니다.</p>
+     *
+     * @param error 에러 코드
+     * @param message 에러 메시지
+     */
+    @Schema(description = "AI 서버 에러 응답")
+    public record YouTubeAiErrorResponse(
+            @Schema(description = "에러 코드", example = "subtitles_not_found")
+            String error,
+
+            @Schema(description = "에러 메시지", example = "해당 YouTube 영상에 자막이 존재하지 않습니다.")
+            String message
+    ) {
+    }
 }
