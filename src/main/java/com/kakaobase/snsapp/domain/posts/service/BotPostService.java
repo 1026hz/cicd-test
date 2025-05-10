@@ -1,11 +1,11 @@
 package com.kakaobase.snsapp.domain.posts.service;
 
-import com.kakaobase.snsapp.domain.members.entity.Member;
-import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
+import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
 import com.kakaobase.snsapp.domain.posts.dto.BotRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostResponseDto;
 import com.kakaobase.snsapp.domain.posts.entity.Post;
+import com.kakaobase.snsapp.global.common.constant.BotConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -28,7 +30,6 @@ import java.util.stream.Collectors;
 public class BotPostService {
 
     private final PostService postService;
-    private final MemberRepository memberRepository;
     private final WebClient webClient;
 
     @Value("${ai.server.url}")
@@ -58,13 +59,13 @@ public class BotPostService {
             BotRequestDto.CreatePostRequest request = createBotRequest(boardType, recentPosts);
 
             // 3. AI 서버 호출
-            BotRequestDto.CreatePostResponse response = callAiServer(request);
+            BotRequestDto.AiPostResponse aiResponse = callAiServer(request);
 
-            // 4. 봇 게시글 저장
-            PostResponseDto.PostCreateResponse createResponse = saveBotPost(response);
+            // 4. 봇 게시글 저장 및 클라이언트 응답 생성
+            PostResponseDto.PostCreateResponse clientResponse = saveBotPost(aiResponse);
 
             log.info("봇 게시글 생성 완료 - boardType: {}", boardType);
-            return createResponse;
+            return clientResponse;
 
         } catch (Exception e) {
             log.error("봇 게시글 생성 실패 - boardType: {}", boardType, e);
@@ -81,17 +82,26 @@ public class BotPostService {
      * @return AI 서버 요청 DTO
      */
     private BotRequestDto.CreatePostRequest createBotRequest(Post.BoardType boardType, List<Post> posts) {
+        // 게시글 작성자들의 정보를 한 번에 조회
+        Map<Long, Map<String, String>> memberInfoMap = postService.getMemberInfoByPosts(posts);
+
         List<BotRequestDto.BotPost> botPosts = posts.stream()
                 .map(post -> {
-                    Member member = memberRepository.findById(post.getMemberId())
-                            .orElseThrow(() -> new IllegalStateException("회원을 찾을 수 없습니다. memberId: " + post.getMemberId()));
+                    Map<String, String> memberInfo = memberInfoMap.get(post.getMemberId());
+                    if (memberInfo == null) {
+                        throw new IllegalStateException("회원 정보를 찾을 수 없습니다. memberId: " + post.getMemberId());
+                    }
+
+                    // Member 엔티티에서 className을 가져오는 로직이 필요
+                    // 현재 PostService의 getMemberInfo가 className을 포함하지 않을 수 있음
+                    String className = memberInfo.getOrDefault("className", "UNKNOWN");
 
                     return new BotRequestDto.BotPost(
                             new BotRequestDto.BotUser(
-                                    member.getNickname(),
-                                    member.getClassName()
+                                    memberInfo.get("nickname"),
+                                    className
                             ),
-                            post.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toString(),
+                            post.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toString(),
                             post.getContent()
                     );
                 })
@@ -106,13 +116,13 @@ public class BotPostService {
      * @param request AI 서버 요청 DTO
      * @return AI 서버 응답 DTO
      */
-    private BotRequestDto.CreatePostResponse callAiServer(BotRequestDto.CreatePostRequest request) {
+    private BotRequestDto.AiPostResponse callAiServer(BotRequestDto.CreatePostRequest request) {
         try {
             return webClient.post()
                     .uri(aiServerUrl + "/posts/bot")
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(BotRequestDto.CreatePostResponse.class)
+                    .bodyToMono(BotRequestDto.AiPostResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
             log.error("AI 서버 요청 실패 - Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
@@ -123,13 +133,13 @@ public class BotPostService {
     /**
      * 봇 게시글 저장
      *
-     * @param response AI 서버 응답
+     * @param aiResponse AI 서버 응답
      * @return 게시글 생성 응답 DTO
      */
-    private PostResponseDto.PostCreateResponse saveBotPost(BotRequestDto.CreatePostResponse response) {
-        BotRequestDto.ResponseData data = response.data();
+    private PostResponseDto.PostCreateResponse saveBotPost(BotRequestDto.AiPostResponse aiResponse) {
+        BotRequestDto.AiResponseData data = aiResponse.data();
 
-        // 게시판 타입 변환
+        // AI 응답 데이터를 사용하여 게시글 생성
         Post.BoardType boardType;
         try {
             boardType = Post.BoardType.valueOf(data.boardType());
@@ -138,16 +148,20 @@ public class BotPostService {
             throw new RuntimeException("잘못된 게시판 타입", e);
         }
 
-        // PostService의 createPost 메서드에 전달할 DTO 생성
-        // PostCreateRequestDto는 snake_case 필드명 사용
+        // 게시글 생성 요청 DTO 생성
         PostRequestDto.PostCreateRequestDto createRequest = new PostRequestDto.PostCreateRequestDto(
                 data.content(),
-                null, // 봇은 이미지 없음
-                null                     // 봇은 YouTube URL 없음
+                null,  // image_url
+                null   // youtube_url
         );
 
-        // PostService의 createPost 메서드 재사용
-        // postType (소문자)로 전달
-        return postService.createPost(createRequest, BotConstants.BOT_MEMBER_ID, boardType.name().toLowerCase());
+        // PostService를 통해 게시글 생성
+        Post savedPost = postService.createPost(boardType, createRequest, BotConstants.BOT_MEMBER_ID);
+
+        // 봇 멤버 정보 조회
+        Map<String, String> botMemberInfo = postService.getMemberInfo(BotConstants.BOT_MEMBER_ID);
+
+        // PostConverter를 사용하여 응답 생성
+        return PostConverter.toPostCreateResponse(savedPost, botMemberInfo, false);
     }
 }

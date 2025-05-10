@@ -76,30 +76,30 @@ public class BotRequestDto {
     }
 
     /**
-     * AI 서버 게시글 생성 응답 DTO
+     * AI 서버로부터의 게시글 생성 응답 DTO
      *
      * @param message 응답 메시지
      * @param data 응답 데이터
      */
-    @Schema(description = "AI 서버 게시글 생성 응답")
-    public record CreatePostResponse(
+    @Schema(description = "AI 서버로부터의 게시글 생성 응답")
+    public record AiPostResponse(
             @Schema(description = "응답 메시지", example = "소셜봇이 게시물을 작성했습니다.")
             String message,
 
             @Schema(description = "응답 데이터")
-            ResponseData data
+            AiResponseData data
     ) {
     }
 
     /**
-     * 응답 데이터 DTO
+     * AI 서버 응답 데이터 DTO
      *
      * @param boardType 게시판 타입
      * @param user 봇 사용자 정보
      * @param content 생성된 게시글 내용
      */
-    @Schema(description = "응답 데이터")
-    public record ResponseData(
+    @Schema(description = "AI 서버 응답 데이터")
+    public record AiResponseData(
             @Schema(description = "게시판 타입", example = "PANGYO_2")
             @JsonProperty("board_type")
             String boardType,
