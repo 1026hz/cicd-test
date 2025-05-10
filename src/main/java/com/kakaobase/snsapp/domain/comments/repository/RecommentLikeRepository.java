@@ -81,8 +81,19 @@ public interface RecommentLikeRepository extends JpaRepository<RecommentLike, Re
      * 대댓글 삭제 시 관련 좋아요도 함께 삭제하는 데 사용됩니다.
      *
      * @param recommentId 대댓글 ID
+     * @return 삭제된 좋아요 수
      */
-    void deleteByRecommentId(Long recommentId);
+    int deleteByRecommentId(Long recommentId);
+
+    /**
+     * 특정 대댓글 목록의 모든 좋아요를 삭제합니다.
+     * 여러 대댓글 삭제 시 관련 좋아요도 함께 삭제하는 데 사용됩니다.
+     *
+     * @param recommentIds 대댓글 ID 목록
+     * @return 삭제된 좋아요 수
+     */
+    @Query("DELETE FROM RecommentLike rl WHERE rl.recommentId IN :recommentIds")
+    int deleteByRecommentIdIn(@Param("recommentIds") List<Long> recommentIds);
 
     /**
      * 특정 회원의 모든 좋아요를 삭제합니다.

@@ -28,16 +28,6 @@ public class CommentRequestDto {
             Long parent_id
     ) {}
 
-    /**
-     * 댓글 수정 요청 DTO
-     */
-    @Schema(description = "댓글 수정 요청 DTO")
-    public record UpdateCommentRequest(
-            @Schema(description = "수정할 댓글 내용", example = "수정된 댓글 내용입니다.", requiredMode = Schema.RequiredMode.REQUIRED)
-            @NotBlank(message = "댓글 내용은 공백일 수 없습니다.")
-            @Size(min = 1, max = 2000, message = "댓글은 최대 2000자까지 작성할 수 있습니다.")
-            String content
-    ) {}
 
     /**
      * 댓글 목록 조회 요청 DTO
@@ -76,22 +66,30 @@ public class CommentRequestDto {
     }
 
     /**
-     * 댓글 좋아요 요청 DTO
+     * 댓글 신고 요청 DTO (V2에서 구현 예정)
      */
-    @Schema(description = "댓글 좋아요 요청 DTO")
-    public record CommentLikeRequest(
-            @Schema(description = "좋아요를 누를 댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "댓글 신고 요청 DTO")
+    public record CommentReportRequest(
+            @Schema(description = "신고할 댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
             @NotNull(message = "댓글 ID는 필수입니다.")
-            Long commentId
+            Long commentId,
+
+            @Schema(description = "신고 사유", example = "스팸 또는 광고 내용", requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotBlank(message = "신고 사유는 필수입니다.")
+            String reason
     ) {}
 
     /**
-     * 대댓글 좋아요 요청 DTO
+     * 대댓글 신고 요청 DTO (V2에서 구현 예정)
      */
-    @Schema(description = "대댓글 좋아요 요청 DTO")
-    public record RecommentLikeRequest(
-            @Schema(description = "좋아요를 누를 대댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "대댓글 신고 요청 DTO")
+    public record RecommentReportRequest(
+            @Schema(description = "신고할 대댓글 ID", example = "123", requiredMode = Schema.RequiredMode.REQUIRED)
             @NotNull(message = "대댓글 ID는 필수입니다.")
-            Long recommentId
+            Long recommentId,
+
+            @Schema(description = "신고 사유", example = "스팸 또는 광고 내용", requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotBlank(message = "신고 사유는 필수입니다.")
+            String reason
     ) {}
 }

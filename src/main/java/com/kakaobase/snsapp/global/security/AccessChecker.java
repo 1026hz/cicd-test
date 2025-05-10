@@ -1,5 +1,7 @@
 package com.kakaobase.snsapp.global.security;
 
+import com.kakaobase.snsapp.domain.comments.repository.CommentRepository;
+import com.kakaobase.snsapp.domain.comments.repository.RecommentRepository;
 import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
 import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
@@ -22,6 +24,8 @@ import org.springframework.util.StringUtils;
 public class AccessChecker {
 
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final RecommentRepository recommentRepository;
 
     /**
      * 사용자가 특정 게시판에 접근할 권한이 있는지 검증합니다.
@@ -94,6 +98,47 @@ public class AccessChecker {
     }
 
     /**
+     * 사용자가 댓글의 소유자인지 검증합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param authentication 인증 정보
+     * @return 소유자이면 true, 아니면 false
+     */
+    public boolean isCommentOwner(Long commentId, Authentication authentication) {
+        // 관리자, 봇 권한이 있는 경우 소유자로 취급
+        if (SecurityUtil.isAdminOrBot()) {
+            return true;
+        }
+
+        // 사용자 ID 확인
+        Long memberId = SecurityUtil.getMemberIdAsLong()
+                .orElseThrow(() -> new CustomException(GeneralErrorCode.RESOURCE_NOT_FOUND, "memberId", "인증 객체에서 회원의 Id을 찾을 수 없습니다"));
+
+        // 댓글 조회
+        return commentRepository.findByIdAndMemberId(commentId, memberId).isPresent();
+    }
+
+    /**
+     * 사용자가 게시글의 댓글을 작성할 권한이 있는지 검증합니다.
+     *
+     * @param postId 게시글 ID
+     * @param authentication 인증 정보
+     * @return 권한이 있으면 true, 아니면 false
+     */
+    public boolean canCommentOnPost(Long postId, Authentication authentication) {
+        // 로그인한 사용자만 댓글 작성 가능
+        if (!SecurityUtil.isAuthenticated()) {
+            return false;
+        }
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "postId"));
+
+        // 게시글이 속한 게시판에 접근 권한이 있는지 확인
+        return hasAccessToBoard(post.getBoardType().name());
+    }
+
+    /**
      * 문자열 형태의 postType을 BoardType enum으로 변환합니다.
      *
      * @param postType 게시판 타입 문자열
@@ -106,5 +151,23 @@ public class AccessChecker {
         } catch (IllegalArgumentException e) {
             throw new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "postType");
         }
+    }
+    /**
+     * 대댓글 소유자인지 확인
+     *
+     * @param recommentId 대댓글 ID
+     * @param authentication 인증 정보
+     * @return 대댓글 소유자 여부
+     */
+    public boolean isRecommentOwner(Long recommentId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        Long memberId = SecurityUtil.getMemberIdAsLong()
+                .orElseThrow(() -> new CustomException(GeneralErrorCode.RESOURCE_NOT_FOUND, "memberId", "인증 객체에서 회원의 Id을 찾을 수 없습니다"));
+
+        // RecommentRepository에서 소유자 확인 쿼리 사용
+        return recommentRepository.findByIdAndMemberId(recommentId, memberId).isPresent();
     }
 }

@@ -81,8 +81,9 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Commen
      * 댓글 삭제 시 관련 좋아요도 함께 삭제하는 데 사용됩니다.
      *
      * @param commentId 댓글 ID
+     * @return 삭제된 좋아요 수
      */
-    void deleteByCommentId(Long commentId);
+    int deleteByCommentId(Long commentId);
 
     /**
      * 특정 회원의 모든 좋아요를 삭제합니다.

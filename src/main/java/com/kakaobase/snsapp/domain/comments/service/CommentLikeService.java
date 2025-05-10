@@ -1,0 +1,257 @@
+package com.kakaobase.snsapp.domain.comments.service;
+
+import com.kakaobase.snsapp.domain.comments.converter.CommentConverter;
+import com.kakaobase.snsapp.domain.comments.converter.LikeConverter;
+import com.kakaobase.snsapp.domain.comments.dto.CommentResponseDto;
+import com.kakaobase.snsapp.domain.comments.entity.Comment;
+import com.kakaobase.snsapp.domain.comments.entity.CommentLike;
+import com.kakaobase.snsapp.domain.comments.entity.Recomment;
+import com.kakaobase.snsapp.domain.comments.entity.RecommentLike;
+import com.kakaobase.snsapp.domain.comments.exception.CommentErrorCode;
+import com.kakaobase.snsapp.domain.comments.exception.CommentException;
+import com.kakaobase.snsapp.domain.comments.repository.CommentLikeRepository;
+import com.kakaobase.snsapp.domain.comments.repository.CommentRepository;
+import com.kakaobase.snsapp.domain.comments.repository.RecommentLikeRepository;
+import com.kakaobase.snsapp.domain.comments.repository.RecommentRepository;
+import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 댓글 및 대댓글 좋아요 관련 비즈니스 로직을 처리하는 서비스
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class CommentLikeService {
+
+    private final CommentRepository commentRepository;
+    private final RecommentRepository recommentRepository;
+    private final CommentLikeRepository commentLikeRepository;
+    private final RecommentLikeRepository recommentLikeRepository;
+    private final LikeConverter likeConverter;
+
+    /**
+     * 댓글에 좋아요를 추가합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param memberId 회원 ID
+     * @return 좋아요 응답 DTO
+     * @throws CommentException 댓글이 없거나 이미 좋아요한 경우
+     */
+    @Transactional
+    public CommentResponseDto.CommentLikeResponse addCommentLike(Long memberId, Long commentId) {
+        // 댓글 존재 여부 확인
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+                .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId"));
+
+        // 이미 좋아요한 경우 확인
+        if (commentLikeRepository.existsByMemberIdAndCommentId(memberId, commentId)) {
+            throw new CommentException(CommentErrorCode.ALREADY_LIKED);
+        }
+
+        // 좋아요 엔티티 생성 및 저장
+        CommentLike commentLike = likeConverter.toCommentLikeEntity(memberId, commentId);
+        commentLikeRepository.save(commentLike);
+
+        // 댓글 좋아요 수 증가
+        comment.increaseLikeCount();
+        commentRepository.save(comment);
+
+        log.info("댓글 좋아요 추가 완료: 댓글 ID={}, 회원 ID={}", commentId, memberId);
+
+        return new CommentResponseDto.CommentLikeResponse(true, comment.getLikeCount());
+    }
+
+    /**
+     * 댓글 좋아요를 취소합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param memberId 회원 ID
+     * @return 좋아요 응답 DTO
+     * @throws CommentException 댓글이 없거나 좋아요하지 않은 경우
+     */
+    @Transactional
+    public CommentResponseDto.CommentLikeResponse removeCommentLike(Long memberId, Long commentId) {
+        // 댓글 존재 여부 확인
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+                .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId"));
+
+        // 좋아요 존재 여부 확인
+        CommentLike commentLike = commentLikeRepository.findByMemberIdAndCommentId(memberId, commentId)
+                .orElseThrow(() -> new CommentException(CommentErrorCode.ALREADY_UNLIKED));
+
+        // 좋아요 삭제
+        commentLikeRepository.delete(commentLike);
+
+        // 댓글 좋아요 수 감소
+        comment.decreaseLikeCount();
+        commentRepository.save(comment);
+
+        log.info("댓글 좋아요 취소 완료: 댓글 ID={}, 회원 ID={}", commentId, memberId);
+
+        return new CommentResponseDto.CommentLikeResponse(false, comment.getLikeCount());
+    }
+
+    /**
+     * 대댓글에 좋아요를 추가합니다.
+     *
+     * @param recommentId 대댓글 ID
+     * @param memberId 회원 ID
+     * @return 좋아요 응답 DTO
+     * @throws CommentException 대댓글이 없거나 이미 좋아요한 경우
+     */
+    @Transactional
+    public CommentResponseDto.RecommentLikeResponse addRecommentLike(Long memberId, Long recommentId) {
+        // 대댓글 존재 여부 확인
+        Recomment recomment = recommentRepository.findByIdAndDeletedAtIsNull(recommentId)
+                .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "recommentId"));
+
+        // 이미 좋아요한 경우 확인
+        if (recommentLikeRepository.existsByMemberIdAndRecommentId(memberId, recommentId)) {
+            throw new CommentException(CommentErrorCode.ALREADY_LIKED);
+        }
+
+        // 좋아요 엔티티 생성 및 저장
+        RecommentLike recommentLike = likeConverter.toRecommentLikeEntity(memberId, recommentId);
+        recommentLikeRepository.save(recommentLike);
+
+        // 대댓글 좋아요 수 증가
+        recomment.increaseLikeCount();
+        recommentRepository.save(recomment);
+
+        log.info("대댓글 좋아요 추가 완료: 대댓글 ID={}, 회원 ID={}", recommentId, memberId);
+
+        return new CommentResponseDto.RecommentLikeResponse(true, recomment.getLikeCount());
+    }
+
+    /**
+     * 대댓글 좋아요를 취소합니다.
+     *
+     * @param recommentId 대댓글 ID
+     * @param memberId 회원 ID
+     * @return 좋아요 응답 DTO
+     * @throws CommentException 대댓글이 없거나 좋아요하지 않은 경우
+     */
+    @Transactional
+    public CommentResponseDto.RecommentLikeResponse removeRecommentLike(Long memberId, Long recommentId) {
+        // 대댓글 존재 여부 확인
+        Recomment recomment = recommentRepository.findByIdAndDeletedAtIsNull(recommentId)
+                .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "recommentId"));
+
+        // 좋아요 존재 여부 확인
+        RecommentLike recommentLike = recommentLikeRepository.findByMemberIdAndRecommentId(memberId, recommentId)
+                .orElseThrow(() -> new CommentException(CommentErrorCode.ALREADY_UNLIKED));
+
+        // 좋아요 삭제
+        recommentLikeRepository.delete(recommentLike);
+
+        // 대댓글 좋아요 수 감소
+        recomment.decreaseLikeCount();
+        recommentRepository.save(recomment);
+
+        log.info("대댓글 좋아요 취소 완료: 대댓글 ID={}, 회원 ID={}", recommentId, memberId);
+
+        return new CommentResponseDto.RecommentLikeResponse(false, recomment.getLikeCount());
+    }
+
+    /**
+     * 회원이 댓글에 좋아요했는지 확인합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param memberId 회원 ID
+     * @return 좋아요 여부
+     */
+    public boolean isCommentLikedByMember(Long commentId, Long memberId) {
+        return commentLikeRepository.existsByMemberIdAndCommentId(memberId, commentId);
+    }
+
+    /**
+     * 회원이 대댓글에 좋아요했는지 확인합니다.
+     *
+     * @param recommentId 대댓글 ID
+     * @param memberId 회원 ID
+     * @return 좋아요 여부
+     */
+    public boolean isRecommentLikedByMember(Long recommentId, Long memberId) {
+        return recommentLikeRepository.existsByMemberIdAndRecommentId(memberId, recommentId);
+    }
+
+    /**
+     * 회원이 특정 댓글 목록 중 좋아요한 댓글 ID 목록을 조회합니다.
+     *
+     * @param memberId 회원 ID
+     * @param commentIds 댓글 ID 목록
+     * @return 좋아요한 댓글 ID 목록
+     */
+    public List<Long> getLikedCommentIdsByMember(Long memberId, List<Long> commentIds) {
+        if (commentIds == null || commentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return commentLikeRepository.findCommentIdsByMemberIdAndCommentIdIn(memberId, commentIds);
+    }
+
+    /**
+     * 회원이 특정 대댓글 목록 중 좋아요한 대댓글 ID 목록을 조회합니다.
+     *
+     * @param memberId 회원 ID
+     * @param recommentIds 대댓글 ID 목록
+     * @return 좋아요한 대댓글 ID 목록
+     */
+    public List<Long> getLikedRecommentIdsByMember(Long memberId, List<Long> recommentIds) {
+        if (recommentIds == null || recommentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return recommentLikeRepository.findRecommentIdsByMemberIdAndRecommentIdIn(memberId, recommentIds);
+    }
+
+    /**
+     * 댓글 삭제 시 연관된 좋아요를 일괄 삭제합니다.
+     *
+     * @param commentId 댓글 ID
+     */
+    @Transactional
+    public void deleteAllCommentLikesByCommentId(Long commentId) {
+        int deletedCount = commentLikeRepository.deleteByCommentId(commentId);
+        log.info("댓글 관련 좋아요 일괄 삭제 완료: 댓글 ID={}, 삭제된 좋아요 수={}", commentId, deletedCount);
+    }
+
+    /**
+     * 대댓글 삭제 시 연관된 좋아요를 일괄 삭제합니다.
+     *
+     * @param recommentId 대댓글 ID
+     */
+    @Transactional
+    public void deleteAllRecommentLikesByRecommentId(Long recommentId) {
+        int deletedCount = recommentLikeRepository.deleteByRecommentId(recommentId);
+        log.info("대댓글 관련 좋아요 일괄 삭제 완료: 대댓글 ID={}, 삭제된 좋아요 수={}", recommentId, deletedCount);
+    }
+
+    /**
+     * 댓글이 삭제될 때 해당 댓글에 달린 모든 대댓글의 좋아요를 일괄 삭제합니다.
+     *
+     * @param commentId 댓글 ID
+     */
+    @Transactional
+    public void deleteAllRecommentLikesByParentCommentId(Long commentId) {
+        // 대댓글 ID 목록 조회
+        List<Long> recommentIds = recommentRepository.findByCommentId(commentId)
+                .stream()
+                .map(Recomment::getId)
+                .toList();
+
+        if (!recommentIds.isEmpty()) {
+            int deletedCount = recommentLikeRepository.deleteByRecommentIdIn(recommentIds);
+            log.info("댓글 관련 대댓글 좋아요 일괄 삭제 완료: 댓글 ID={}, 삭제된 좋아요 수={}", commentId, deletedCount);
+        }
+    }
+}

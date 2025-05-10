@@ -11,7 +11,7 @@ public enum CommentErrorCode implements BaseErrorCode {
 
 
     CONTENT_LENGTH_EXCEEDED(HttpStatus.BAD_REQUEST, "content_length_exceeded", "댓글 본문은 최대 2000자까지 작성할 수 있습니다.", "content"),
-
+    INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "invalid_parent_comment", "유효하지 않은 부모 댓글입니다. 대댓글에는 댓글을 작성할 수 없습니다.", null),
     // 권한 관련 에러
     POST_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "forbidden", "본인의 댓글만 삭제할 수 있습니다.", "postId"),
     POST_TYPE_FORBIDDEN(HttpStatus.FORBIDDEN, "forbidden", "해당 댓글에 접근할 권한이 없습니다.", "postType"),
