@@ -28,16 +28,6 @@ public class CommentRequestDto {
             Long parent_id
     ) {}
 
-    /**
-     * 댓글 수정 요청 DTO
-     */
-    @Schema(description = "댓글 수정 요청 DTO")
-    public record UpdateCommentRequest(
-            @Schema(description = "수정할 댓글 내용", example = "수정된 댓글 내용입니다.", requiredMode = Schema.RequiredMode.REQUIRED)
-            @NotBlank(message = "댓글 내용은 공백일 수 없습니다.")
-            @Size(min = 1, max = 2000, message = "댓글은 최대 2000자까지 작성할 수 있습니다.")
-            String content
-    ) {}
 
     /**
      * 댓글 목록 조회 요청 DTO
