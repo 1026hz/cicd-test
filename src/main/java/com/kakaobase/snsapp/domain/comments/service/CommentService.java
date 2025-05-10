@@ -104,6 +104,10 @@ public class CommentService {
             throw new CommentException(CommentErrorCode.POST_NOT_AUTHORIZED, "commentId", "본인이 작성한 댓글만 삭제할 수 있습니다.");
         }
 
+        // 게시글의 댓글 수 1감소
+        Post post = postService.findById(comment.getPost().getId());
+        post.decreaseCommentCount();
+
         // 댓글의 좋아요 삭제
         commentLikeService.deleteAllCommentLikesByCommentId(commentId);
 

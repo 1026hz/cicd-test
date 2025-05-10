@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.posts.controller;
 
+import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
 import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostResponseDto;
@@ -8,10 +9,14 @@ import com.kakaobase.snsapp.domain.posts.exception.PostErrorCode;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
 import com.kakaobase.snsapp.domain.posts.service.PostLikeService;
 import com.kakaobase.snsapp.domain.posts.service.PostService;
+import com.kakaobase.snsapp.global.common.response.CustomResponse;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
+import com.kakaobase.snsapp.global.security.AccessChecker;
 import com.kakaobase.snsapp.global.security.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -238,5 +244,41 @@ public class PostController {
         PostResponseDto.PostLikeResponse response = PostConverter.toPostLikeResponse(false);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * YouTube 영상 요약 요청 API
+     *
+     * <p>사용자가 작성한 게시글에 포함된 YouTube URL의 영상을 요약합니다.
+     * AI 서버를 통해 영상의 자막을 분석하여 요약본을 생성하고,
+     * 생성된 요약을 게시글에 저장한 후 응답합니다.</p>
+     *
+     * @param postId 요약을 요청할 게시글의 ID
+     * @param userDetails 인증된 사용자 정보
+     * @return YouTube 영상 요약 결과
+     * @throws PostException 게시글을 찾을 수 없거나, 권한이 없거나, YouTube URL이 없는 경우
+     */
+    @GetMapping("/{postId}/summary")
+    @Operation(summary = "YouTube 영상 요약", description = "게시글의 YouTube 영상을 요약합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "YouTube 영상이 요약되었습니다."),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요한 요청입니다."),
+            @ApiResponse(responseCode = "403", description = "본인의 글만 요약 가능합니다."),
+            @ApiResponse(responseCode = "404", description = "해당 게시글을 찾을 수 없습니다."),
+            @ApiResponse(responseCode = "500", description = "서버에 문제가 발생하였습니다.")
+    })
+    @PreAuthorize("isAuthenticated() && @accessChecker.isPostOwner(#postId, authentication)")
+    public ResponseEntity<CustomResponse<PostResponseDto.YouTubeSummaryResponse>> summarizeYoutube(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        // 사용자 인증 정보에서 memberId 추출
+        Long memberId = Long.valueOf(userDetails.getId());
+
+        // 게시글의 YouTube 영상 요약 실행
+        PostResponseDto.YouTubeSummaryResponse response = postService.summarizeYoutube(postId, memberId);
+
+        // 성공 응답 반환
+        return ResponseEntity.ok(CustomResponse.success("유튜브 요약에 성공하였습니다.", response));
     }
 }
