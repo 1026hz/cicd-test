@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.members.service;
 
+import com.kakaobase.snsapp.domain.comments.dto.BotRecommentRequestDto;
 import com.kakaobase.snsapp.domain.members.converter.MemberConverter;
 import com.kakaobase.snsapp.domain.members.dto.MemberRequestDto;
 import com.kakaobase.snsapp.domain.members.entity.Member;
@@ -166,5 +167,23 @@ public class MemberService {
     @Transactional(readOnly = true)
     public boolean existsById(Long memberId) {
         return memberRepository.existsById(memberId);
+    }
+
+    /**
+     * 회원의 닉네임과 기수 정보만 조회합니다.
+     *
+     * @param memberId 회원 ID
+     * @return BotUser DTO (닉네임, 기수)
+     * @throws MemberException 회원을 찾을 수 없는 경우
+     */
+    @Transactional(readOnly = true)
+    public BotRecommentRequestDto.UserInfo getMemberBotInfo(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND, "memberId"));
+
+        return new BotRecommentRequestDto.UserInfo(
+                member.getNickname(),
+                member.getClassName()
+        );
     }
 }
