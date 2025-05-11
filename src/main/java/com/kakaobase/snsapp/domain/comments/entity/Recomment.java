@@ -4,6 +4,7 @@ import com.kakaobase.snsapp.domain.members.entity.Member;
 import com.kakaobase.snsapp.global.common.entity.BaseSoftDeletableEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -51,11 +52,11 @@ public class Recomment extends BaseSoftDeletableEntity {
      * @param member 대댓글 작성자
      * @param content 대댓글 내용
      */
+    @Builder
     public Recomment(Comment comment, Member member, String content) {
         this.comment = comment;
         this.member = member;
         this.content = content;
-        comment.increaseRecommentCount();
     }
 
     /**

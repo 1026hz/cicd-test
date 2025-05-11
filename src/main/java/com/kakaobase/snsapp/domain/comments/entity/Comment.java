@@ -6,6 +6,7 @@ import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.global.common.entity.BaseSoftDeletableEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -63,6 +64,7 @@ public class Comment extends BaseSoftDeletableEntity {
      * @param member 댓글 작성자
      * @param content 댓글 내용
      */
+    @Builder
     public Comment(Post post, Member member, String content) {
         this.post = post;
         this.member = member;
