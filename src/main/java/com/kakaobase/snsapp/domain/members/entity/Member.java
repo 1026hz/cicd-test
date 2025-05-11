@@ -18,8 +18,6 @@ import org.hibernate.annotations.*;
         }
 )
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @SQLDelete(sql = "UPDATE members SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
@@ -59,15 +57,25 @@ public class Member extends BaseSoftDeletableEntity {
 
     @Column(name = "is_banned")
     @ColumnDefault("false")
-    private Boolean isBanned;
+    private Boolean isBanned = false;
 
     @Column(name = "following_count", nullable = false)
     @ColumnDefault("0")
-    private Integer followingCount;
+    private Integer followingCount = 0;
 
     @Column(name = "follower_count", nullable = false)
     @ColumnDefault("0")
-    private Integer followerCount;
+    private Integer followerCount = 0;
+
+    @Builder
+    public Member(String email, String name, String nickname, String password, ClassName className, String githubUrl) {
+        this.email = email;
+        this.name = name;
+        this.nickname = nickname;
+        this.password = password;
+        this.className = className;
+        this.githubUrl = githubUrl;
+    }
 
 
     /**
