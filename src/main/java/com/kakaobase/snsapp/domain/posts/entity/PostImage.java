@@ -3,6 +3,7 @@ package com.kakaobase.snsapp.domain.posts.entity;
 import com.kakaobase.snsapp.global.common.entity.BaseUpdateTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -45,6 +46,7 @@ public class PostImage extends BaseUpdateTimeEntity {
      * @param sortIndex 이미지 정렬 순서
      * @param imgUrl 이미지 URL
      */
+    @Builder
     public PostImage(Post post, Integer sortIndex, String imgUrl) {
         this.post = post;
         this.sortIndex = sortIndex;
