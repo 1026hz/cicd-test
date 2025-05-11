@@ -42,7 +42,7 @@ app:
     refresh:
       expiration-time: 604800000 # 7일
       token-name: kakaobase_refresh_token
-      path: /auth/tokens/refresh
+      path: /auth/tokens
 
 cloud:
   aws:
