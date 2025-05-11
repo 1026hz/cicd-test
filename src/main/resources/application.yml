@@ -1,0 +1,78 @@
+spring:
+  application:
+    name : 22-tenten-be
+  datasource:
+    url: ${MYSQL_URL}
+    username: root
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    secure: true
+    issuer: kakaobase
+    audience: web
+    access:
+      expiration-time: 1800000 # 30분
+    refresh:
+      expiration-time: 604800000 # 7일
+      token-name: kakaobase_refresh_token
+      path: /auth/tokens/refresh
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}  # AWS IAM 사용자의 액세스 키
+      secret-key: ${AWS_SECRIT_KEY}  # AWS IAM 사용자의 시크릿 키
+    region:
+      static: ap-northeast-2  # 사용할 AWS 리전 (서울 리전)
+    s3:
+      bucket: YOUR_S3_BUCKET_NAME      # 사용할 S3 버킷 이름
+      expiration-time: 300             # Presigned URL 만료 시간(초)
+      max-file-size: 10485760          # 최대 파일 크기 (10MB)
+
+# S3 사용 시 발생할 수 있는 로깅 제어 (선택사항)
+logging:
+  level:
+    com.amazonaws.util.EC2MetadataUtils: ERROR # EC2 메타데이터 관련 로그 수준 조정
+    com.amazonaws.services.s3: INFO            # S3 서비스 관련 로그 수준
+    com.kakaobase.snsapp.global.security: DEBUG
+    com.kakaobase.snsapp.domain.auth: DEBUG
+    com.kakaobase.snsapp.domain.posts: DEBUG
+    org.springframework.security: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
+    url: /v3/api-docs
+
+ai:
+  server:
+    url: ${AI_SERVER_URL}
