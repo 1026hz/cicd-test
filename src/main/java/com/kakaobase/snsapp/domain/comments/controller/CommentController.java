@@ -35,7 +35,7 @@ public class CommentController {
      * 댓글 작성 API
      */
     @PostMapping("/posts/{postId}/comments")
-    @PreAuthorize("@accessChecker.canCommentOnPost(#postId, authentication)")
+    @PreAuthorize("isAuthenticated() &&  @accessChecker.canCommentOnPost(#postId, authentication.principal)")
     @Operation(
             summary = "댓글 작성",
             description = "게시글에 댓글을 작성합니다. parentId가 없으면 일반 댓글, 있으면 대댓글로 등록됩니다."
@@ -87,7 +87,7 @@ public class CommentController {
      * 댓글 삭제 API
      */
     @DeleteMapping("/comments/{commentId}")
-    @PreAuthorize("@accessChecker.isCommentOwner(#commentId, authentication)")
+    @PreAuthorize("@accessChecker.isCommentOwner(#commentId, authentication.principal)")
     @Operation(
             summary = "댓글 삭제",
             description = "댓글을 삭제합니다. 자신이 작성한 댓글만 삭제할 수 있습니다."
@@ -110,7 +110,7 @@ public class CommentController {
      * 게시글의 댓글 목록 조회 API
      */
     @GetMapping("/posts/{postId}/comments")
-    @PreAuthorize("@accessChecker.canViewPost(#postId, authentication)")
+    @PreAuthorize("@accessChecker.canViewPost(#postId, authentication.principal)")
     @Operation(
             summary = "게시글의 댓글 목록 조회",
             description = "게시글에 작성된 댓글 목록을 조회합니다. 페이지네이션을 지원합니다."
@@ -266,7 +266,7 @@ public class CommentController {
      * 대댓글 삭제 API
      */
     @DeleteMapping("/recomments/{recommentId}")
-    @PreAuthorize("@accessChecker.isRecommentOwner(#recommentId, authentication)")
+    @PreAuthorize("@accessChecker.isRecommentOwner(#recommentId, authentication.principal)")
     @Operation(
             summary = "대댓글 삭제",
             description = "대댓글을 삭제합니다. 자신이 작성한 대댓글만 삭제할 수 있습니다."

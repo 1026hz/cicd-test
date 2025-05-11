@@ -5,16 +5,11 @@ import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostResponseDto;
 import com.kakaobase.snsapp.domain.posts.entity.Post;
-import com.kakaobase.snsapp.domain.posts.entity.PostImage;
 import com.kakaobase.snsapp.domain.posts.exception.PostErrorCode;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
-import com.kakaobase.snsapp.domain.posts.repository.PostImageRepository;
 import com.kakaobase.snsapp.domain.posts.service.PostLikeService;
 import com.kakaobase.snsapp.domain.posts.service.PostService;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
-import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
-import com.kakaobase.snsapp.global.security.AccessChecker;
-import com.kakaobase.snsapp.global.security.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -53,7 +48,7 @@ public class PostController {
      */
     @GetMapping("/{postType}")
     @Operation(summary = "게시글 목록 조회", description = "게시판 유형별로 게시글 목록을 조회합니다.")
-    @PreAuthorize("@accessChecker.hasAccessToBoard(#postType)")
+    @PreAuthorize("@accessChecker.hasAccessToBoard(#postType, authentication.principal)")
     public ResponseEntity<PostResponseDto.PostListResponse> getPosts(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
             @Parameter(description = "한 페이지에 표시할 게시글 수") @RequestParam(defaultValue = "12") int limit,
@@ -70,7 +65,7 @@ public class PostController {
 
     @GetMapping("/{postType}/{postId}")
     @Operation(summary = "게시글 상세 조회", description = "게시글의 상세 정보를 조회합니다.")
-    @PreAuthorize("isAuthenticated() && @accessChecker.hasAccessToBoard(#postType)")
+    @PreAuthorize("isAuthenticated() && @accessChecker.hasAccessToBoard(#postType, authentication.principal)")
     public ResponseEntity<PostResponseDto.PostDetailResponse> getPostDetail(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
             @Parameter(description = "게시글 ID") @PathVariable Long postId,
@@ -88,7 +83,7 @@ public class PostController {
      */
     @PostMapping("/{postType}")
     @Operation(summary = "게시글 생성", description = "새 게시글을 생성합니다.")
-    @PreAuthorize("isAuthenticated() && @accessChecker.hasAccessToBoard(#postType)")
+    @PreAuthorize("isAuthenticated() && @accessChecker.hasAccessToBoard(#postType, authentication.principal)")
     public ResponseEntity<PostResponseDto.PostCreateResponse> createPost(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
             @Valid @RequestBody PostRequestDto.PostCreateRequestDto requestDto,
@@ -130,7 +125,7 @@ public class PostController {
      */
     @DeleteMapping("/{postType}/{postId}")
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
-    @PreAuthorize("@accessChecker.hasAccessToBoard(#postType) and @accessChecker.isPostOwner(#postId, authentication)")
+    @PreAuthorize("@accessChecker.hasAccessToBoard(#postType, authentication.principal) and @accessChecker.isPostOwner(#postId, authentication.principal)")
     public ResponseEntity<PostResponseDto.PostDeleteResponse> deletePost(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
             @Parameter(description = "게시글 ID") @PathVariable Long postId,
@@ -213,7 +208,7 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "해당 게시글을 찾을 수 없습니다."),
             @ApiResponse(responseCode = "500", description = "서버에 문제가 발생하였습니다.")
     })
-    @PreAuthorize("isAuthenticated() && @accessChecker.isPostOwner(#postId, authentication)")
+    @PreAuthorize("isAuthenticated() && @accessChecker.isPostOwner(#postId, authentication.principal)")
     public ResponseEntity<CustomResponse<PostResponseDto.YouTubeSummaryResponse>> summarizeYoutube(
             @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails
