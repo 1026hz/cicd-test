@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 게시글 관련 API 컨트롤러
@@ -149,11 +150,12 @@ public class PostController {
     @PreAuthorize("isAuthenticated() && @accessChecker.hasAccessToBoard(#postType)")
     public ResponseEntity<PostResponseDto.PostCreateResponse> createPost(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
-            @Valid @RequestBody PostRequestDto.PostCreateRequestDto requestDto) {
+            @Valid @RequestBody PostRequestDto.PostCreateRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // SecurityUtil 사용하여 ID 가져오기 - 이 시점에서는 인증된 사용자임이 보장됨
-        Long memberId = SecurityUtil.getMemberIdAsLong()
-                .orElseThrow(() -> new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "memberId", "memberId를 찾을 수 없습니다"));
+
+        Long memberId = Long.valueOf(Optional.ofNullable(userDetails.getId())
+                .orElseThrow(() -> new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "memberId", "memberId를 찾을 수 없습니다")));
 
 
         // 게시글 내용 유효성 검증
