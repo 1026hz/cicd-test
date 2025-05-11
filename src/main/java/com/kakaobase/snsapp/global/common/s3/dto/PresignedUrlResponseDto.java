@@ -27,7 +27,7 @@ public class PresignedUrlResponseDto {
     @Schema(description = "S3에 파일을 업로드하기 위한 Presigned URL",
             example = "https://my-bucket.s3.amazonaws.com/uploads/cat.jpg?AWSAccessKeyId=...",
             required = true)
-    private String presingedUrl;
+    private String presinged_url;
 
     /**
      * 이미지 접근 URL
@@ -35,7 +35,7 @@ public class PresignedUrlResponseDto {
     @Schema(description = "업로드 완료 후 이미지에 접근할 수 있는 URL",
             example = "https://my-bucket.s3.amazonaws.com/uploads/cat.jpg",
             required = true)
-    private String imageUrl;
+    private String image_url;
 
     /**
      * URL 만료 시간 (초)
@@ -43,5 +43,5 @@ public class PresignedUrlResponseDto {
     @Schema(description = "Presigned URL의 유효 시간 (초)",
             example = "300",
             required = true)
-    private Integer expiresIn;
+    private Integer expires_in;
 }
