@@ -112,16 +112,8 @@ public class AuthController {
 
         log.info("액세스 토큰 재발급 요청");
 
-        // 쿠키에서 리프레시 토큰 추출
-        String refreshToken = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
 
-        // 리프레시 토큰이 없으면 예외 발생
-        if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISSING);
-        }
-
-        // 액세스 토큰 재발급
-        String newAccessToken = userAuthenticationService.refreshAuthentication(refreshToken);
+        String newAccessToken = userAuthenticationService.refreshAuthentication(httpRequest);
 
         log.info("액세스 토큰 재발급 성공");
 
@@ -153,21 +145,10 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
-        log.info("로그아웃 요청");
+        log.info("로그아웃 요청 수신");
 
-        // 쿠키에서 리프레시 토큰 추출
-        String refreshToken = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
-
-        // 토큰 무효화 처리
-        if (refreshToken != null) {
-            userAuthenticationService.logout(refreshToken);
-            log.info("리프레시 토큰 무효화 완료");
-        }
-
-        // 쿠키에서 리프레시 토큰 제거
-        httpResponse.addCookie(cookieUtil.clearRefreshTokenCookie());
-
-        log.info("로그아웃 성공");
+        // Service에 전체 로그아웃 처리 위임
+        userAuthenticationService.logout(httpRequest, httpResponse);
 
         return CustomResponse.success("정상적으로 로그아웃되었습니다.");
     }
