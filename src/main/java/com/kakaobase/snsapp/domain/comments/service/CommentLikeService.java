@@ -162,27 +162,6 @@ public class CommentLikeService {
         return new CommentResponseDto.RecommentLikeResponse(false, recomment.getLikeCount());
     }
 
-    /**
-     * 회원이 댓글에 좋아요했는지 확인합니다.
-     *
-     * @param commentId 댓글 ID
-     * @param memberId 회원 ID
-     * @return 좋아요 여부
-     */
-    public boolean isCommentLikedByMember(Long commentId, Long memberId) {
-        return commentLikeRepository.existsByMemberIdAndCommentId(memberId, commentId);
-    }
-
-    /**
-     * 회원이 대댓글에 좋아요했는지 확인합니다.
-     *
-     * @param recommentId 대댓글 ID
-     * @param memberId 회원 ID
-     * @return 좋아요 여부
-     */
-    public boolean isRecommentLikedByMember(Long recommentId, Long memberId) {
-        return recommentLikeRepository.existsByMemberIdAndRecommentId(memberId, recommentId);
-    }
 
     /**
      * 회원이 특정 댓글 목록 중 좋아요한 댓글 ID 목록을 조회합니다.
