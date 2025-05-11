@@ -42,10 +42,6 @@ public class MemberConverter {
                 .nickname(request.nickname())
                 .className(className)
                 .githubUrl(request.githubUrl())
-                .role(Member.Role.USER)
-                .isBanned(false)
-                .followerCount(0)
-                .followingCount(0)
                 .build();
 
     }

@@ -28,26 +28,10 @@ import java.util.List;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 @SQLDelete(sql = "UPDATE posts SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @Where(clause = "deleted_at IS NULL")
 public class Post extends BaseSoftDeletableEntity {
 
-    /**
-     * 게시판 유형을 정의하는 열거형
-     * <p>
-     * 게시글이 속한 게시판의 유형을 나타냅니다.
-     * </p>
-     */
-    public enum BoardType {
-        ALL,        // 전체 게시판
-        PANGYO_1,   // 판교 1기 게시판
-        PANGYO_2,   // 판교 2기 게시판
-        JEJU_1,     // 제주 1기 게시판
-        JEJU_2,     // 제주 2기 게시판
-        JEJU_3      // 제주 3기 게시판
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,23 +54,35 @@ public class Post extends BaseSoftDeletableEntity {
     private String youtubeSummary;
 
     @Column(name = "like_count", nullable = false)
-    @Builder.Default
     private Integer likeCount = 0;
 
     @Column(name = "comment_count", nullable = false)
-    @Builder.Default
     private Integer commentCount = 0;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<PostImage> images = new ArrayList<>();
 
-    public Post(Long memberId, BoardType boardType, String content) {
+    @Builder
+    public Post(Long memberId, BoardType boardType, String content, String youtubeUrl) {
         this.memberId = memberId;
         this.boardType = boardType;
         this.content = content;
+        this.youtubeUrl = youtubeUrl;
     }
 
+
+    /**
+     * 게시판 유형을 정의하는 열거형
+     * <p>
+     * 게시글이 속한 게시판의 유형을 나타냅니다.
+     * </p>
+     */
+    public enum BoardType {
+        ALL,        // 전체 게시판
+        PANGYO_1,   // 판교 1기 게시판
+        PANGYO_2,   // 판교 2기 게시판
+        JEJU_1,     // 제주 1기 게시판
+        JEJU_2,     // 제주 2기 게시판
+        JEJU_3      // 제주 3기 게시판
+    }
 
     /**
      * 유튜브 요약 내용을 설정합니다.
@@ -97,14 +93,6 @@ public class Post extends BaseSoftDeletableEntity {
         this.youtubeSummary = summary;
     }
 
-    /**
-     * 게시글에 이미지를 추가합니다.
-     *
-     * @param image 추가할 이미지
-     */
-    public void addImage(PostImage image) {
-        this.images.add(image);
-    }
 
     /**
      * 좋아요 수를 증가시킵니다.

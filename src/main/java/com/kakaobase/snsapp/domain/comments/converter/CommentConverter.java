@@ -29,15 +29,17 @@ public class CommentConverter {
      * @param request 댓글 작성 요청 DTO
      * @return 생성된 댓글 엔티티
      */
-    public Comment toCommentEntity(Post post, Member member, CommentRequestDto.CreateCommentRequest request) {
+    public Comment toCommentEntity(
+            Post post,
+            Member member,
+            CommentRequestDto.CreateCommentRequest request) {
         validateContent(request.content());
 
-        // parent_id가 있으면 대댓글 생성 요청이므로 검증
-        if (request.parent_id() != null) {
-            throw new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId", "해당 대댓글을 찾을 수 없습니다.");
-        }
-
-        return new Comment(post, member, request.content());
+        return Comment.builder()
+                .post(post)
+                .member(member)
+                .content(request.content())
+                .build();
     }
 
     /**
@@ -51,7 +53,11 @@ public class CommentConverter {
     public Recomment toRecommentEntity(Comment parentComment, Member member, CommentRequestDto.CreateCommentRequest request) {
         validateContent(request.content());
 
-        return new Recomment(parentComment, member, request.content());
+        return Recomment.builder()
+                .comment(parentComment)
+                .member(member)
+                .content(request.content())
+                .build();
     }
 
     /**

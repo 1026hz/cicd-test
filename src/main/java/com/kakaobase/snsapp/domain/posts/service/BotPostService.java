@@ -162,6 +162,6 @@ public class BotPostService {
         Map<String, String> botMemberInfo = postService.getMemberInfo(BotConstants.BOT_MEMBER_ID);
 
         // PostConverter를 사용하여 응답 생성
-        return PostConverter.toPostCreateResponse(savedPost, botMemberInfo, false);
+        return PostConverter.toPostCreateResponse(savedPost, botMemberInfo, null, false);
     }
 }

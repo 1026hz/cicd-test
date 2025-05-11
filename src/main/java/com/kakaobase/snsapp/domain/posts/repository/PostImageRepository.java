@@ -35,6 +35,15 @@ public interface PostImageRepository extends JpaRepository<PostImage, Long> {
      */
     Optional<PostImage> findByIdAndPostId(Long id, Long postId);
 
+    @Query("SELECT pi FROM PostImage pi " +
+            "WHERE pi.post.id IN :postIds " +
+            "AND pi.sortIndex = (" +
+            "    SELECT MIN(pi2.sortIndex) " +
+            "    FROM PostImage pi2 " +
+            "    WHERE pi2.post.id = pi.post.id" +
+            ")")
+    List<PostImage> findFirstImagesByPostIds(@Param("postIds") List<Long> postIds);
+
     /**
      * 특정 게시글의 특정 순서에 있는 이미지를 조회합니다.
      *

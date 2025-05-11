@@ -107,7 +107,7 @@ public class PostLikeService {
     }
 
     /**
-     * 회원이 특정 게시글 목록 중 좋아요한 게시글 ID 목록을 조회합니다.
+     * 게시글 목록 중 회원이 좋아요한 게시글 ID 목록을 조회합니다.
      *
      * @param memberId 회원 ID
      * @param posts 게시글 목록
