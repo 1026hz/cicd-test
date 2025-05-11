@@ -33,7 +33,6 @@ public class UserAuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final CookieUtil cookieUtil;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
 
     /**
