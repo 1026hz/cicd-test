@@ -6,7 +6,10 @@ import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
 import com.kakaobase.snsapp.domain.auth.exception.AuthException;
 import com.kakaobase.snsapp.domain.auth.service.UserAuthenticationService;
 import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
+import com.kakaobase.snsapp.domain.members.entity.Member;
+import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
+import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,6 +37,7 @@ public class AuthController {
 
     private final UserAuthenticationService userAuthenticationService;
     private final CookieUtil cookieUtil;
+    private final MemberRepository memberRepository;
 
     /**
      * 로그인 API
@@ -55,7 +59,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = AuthResponseDto.RefreshTokenInvalid.class)))
     })
     @PostMapping("/tokens")
-    public CustomResponse<AuthResponseDto.TokenResponse> login(
+    public CustomResponse<AuthResponseDto.LoginResponse> login(
             @Parameter(description = "로그인 정보", required = true)
             @Valid @RequestBody AuthRequestDto.Login request,
             HttpServletRequest httpRequest,
@@ -75,10 +79,13 @@ public class AuthController {
 
         log.info("로그인 성공: {}", request.email());
 
+        Member member = memberRepository.findByEmail(request.email())
+                .orElseThrow(()-> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, "email", "사용자의 이메일을 찾을 수 없습니다"));
+
         // 액세스 토큰을 응답 본문에 포함
         return CustomResponse.success(
                 "로그인에 성공하였습니다.",
-                new AuthResponseDto.TokenResponse(result.accessToken())
+                new AuthResponseDto.LoginResponse(result.accessToken(), member.getNickname(), member.getClassName())
         );
     }
 
