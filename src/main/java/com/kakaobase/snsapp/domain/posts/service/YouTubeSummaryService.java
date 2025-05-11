@@ -41,6 +41,7 @@ public class YouTubeSummaryService {
         try {
             // AI 서버 요청 DTO 생성
             PostRequestDto.YouTubeAiRequest request = new PostRequestDto.YouTubeAiRequest(youtubeUrl);
+            log.info("YoutubeSummary {}", request.toString());
 
             // AI 서버에 요약 요청
             PostRequestDto.YouTubeAiResponse response = webClient.post()
