@@ -8,14 +8,32 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class AuthResponseDto {
 
     /**
-     * 액세스 토큰 응답 DTO
+     * 로그인 Dto
      * - RefreshToken은 쿠키로 전달됨
+     */
+    @Schema(description = "로그인 또는 토큰 재발급 성공 응답 DTO")
+    public record LoginResponse(
+
+            @Schema(description = "AccessToken (JWT 형식)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6...")
+            String access_token,
+
+            @Schema(description = "로그인 유저의 닉네임", example = "rick.lee")
+            String nickname,
+
+            @Schema(description = "사용자의 기수명", example = "PANGYO_2")
+            String class_name
+
+    ) {}
+
+    /**
+     * 액세스 토큰 응답 DTO
+     *
      */
     @Schema(description = "로그인 또는 토큰 재발급 성공 응답 DTO")
     public record TokenResponse(
 
             @Schema(description = "AccessToken (JWT 형식)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6...")
-            String accessToken
+            String access_token
 
     ) {}
 
