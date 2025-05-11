@@ -4,6 +4,7 @@ import com.kakaobase.snsapp.global.common.entity.BaseCreatedTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +15,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "revoked_refresh_tokens")
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
@@ -39,6 +39,7 @@ public class RevokedRefreshToken extends BaseCreatedTimeEntity {
      * BaseCreatedTimeEntity의 createdAt 필드가 이 역할을 합니다.
      * revoked_at 컬럼에 매핑됩니다.
      */
+    @CreatedDate
     @Column(name = "revoked_at", insertable = false, updatable = false)
     private LocalDateTime revokedAt;
 
@@ -52,14 +53,11 @@ public class RevokedRefreshToken extends BaseCreatedTimeEntity {
         return this.memberId.equals(memberId);
     }
 
-    /**
-     * 해시된 토큰과 사용자 정보를 기반으로 취소 토큰 객체를 생성합니다.
-     */
-    public static RevokedRefreshToken from(String refreshTokenHash, Long memberId) {
-        return RevokedRefreshToken.builder()
-                .refreshTokenHash(refreshTokenHash)
-                .memberId(memberId)
-                .build();
+    @Builder
+    RevokedRefreshToken(String refreshTokenHash, Long memberId) {
+        this.refreshTokenHash = refreshTokenHash;
+        this.memberId = memberId;
     }
+
 
 }

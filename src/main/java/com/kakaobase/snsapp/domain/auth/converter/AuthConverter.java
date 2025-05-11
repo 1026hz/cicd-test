@@ -57,7 +57,6 @@ public class AuthConverter {
         return RevokedRefreshToken.builder()
                 .refreshTokenHash(refreshTokenHash)
                 .memberId(memberId)
-                .revokedAt(LocalDateTime.now())
                 .build();
     }
 
