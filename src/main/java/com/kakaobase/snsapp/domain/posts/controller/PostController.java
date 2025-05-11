@@ -57,15 +57,11 @@ public class PostController {
     public ResponseEntity<PostResponseDto.PostListResponse> getPosts(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
             @Parameter(description = "한 페이지에 표시할 게시글 수") @RequestParam(defaultValue = "12") int limit,
-            @Parameter(description = "마지막으로 조회한 게시글 ID") @RequestParam(required = false) Long cursor) {
+            @Parameter(description = "마지막으로 조회한 게시글 ID") @RequestParam(required = false) Long cursor,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
 
-        // 사용자 인증 정보 확인
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long memberId = null;
-
-        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
-            memberId = Long.parseLong(authentication.getName());
-        }
+        Long memberId = Long.valueOf(userDetails.getId());
 
         PostResponseDto.PostListResponse response = postService.getPostList(postType, limit, cursor, memberId);
 
@@ -82,7 +78,6 @@ public class PostController {
     ) {
         Long memberId = Long.valueOf(userDetails.getId());
 
-        // Service 계층으로 비즈니스 로직 위임
         PostResponseDto.PostDetailResponse response = postService.getPostDetail(postId, memberId);
 
         return ResponseEntity.ok(response);
@@ -96,12 +91,11 @@ public class PostController {
     @PreAuthorize("isAuthenticated() && @accessChecker.hasAccessToBoard(#postType)")
     public ResponseEntity<PostResponseDto.PostCreateResponse> createPost(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
-            @Valid @RequestBody PostRequestDto.PostCreateRequestDto requestDto) {
+            @Valid @RequestBody PostRequestDto.PostCreateRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
 
-        // SecurityUtil 사용하여 ID 가져오기 - 이 시점에서는 인증된 사용자임이 보장됨
-        Long memberId = SecurityUtil.getMemberIdAsLong()
-                .orElseThrow(() -> new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "memberId", "memberId를 찾을 수 없습니다"));
-
+        Long memberId = Long.valueOf(userDetails.getId());
 
         // 게시글 내용 유효성 검증
         if (requestDto.isEmpty()) {
@@ -139,10 +133,11 @@ public class PostController {
     @PreAuthorize("@accessChecker.hasAccessToBoard(#postType) and @accessChecker.isPostOwner(#postId, authentication)")
     public ResponseEntity<PostResponseDto.PostDeleteResponse> deletePost(
             @Parameter(description = "게시판 유형") @PathVariable String postType,
-            @Parameter(description = "게시글 ID") @PathVariable Long postId) {
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long memberId = Long.parseLong(authentication.getName());
+        Long memberId = Long.valueOf(userDetails.getId());
 
         // 게시글 삭제
         postService.deletePost(postId, memberId);
@@ -160,10 +155,11 @@ public class PostController {
     @Operation(summary = "게시글 좋아요 추가", description = "게시글에 좋아요를 추가합니다.")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PostResponseDto.PostLikeResponse> addLike(
-            @Parameter(description = "게시글 ID") @PathVariable Long postId) {
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long memberId = Long.parseLong(authentication.getName());
+        Long memberId = Long.valueOf(userDetails.getId());
 
         // 좋아요 추가
         postLikeService.addLike(postId, memberId);
@@ -181,10 +177,11 @@ public class PostController {
     @Operation(summary = "게시글 좋아요 취소", description = "게시글 좋아요를 취소합니다.")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PostResponseDto.PostLikeResponse> removeLike(
-            @Parameter(description = "게시글 ID") @PathVariable Long postId) {
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long memberId = Long.parseLong(authentication.getName());
+        Long memberId = Long.valueOf(userDetails.getId());
 
         // 좋아요 취소
         postLikeService.removeLike(postId, memberId);
