@@ -34,12 +34,12 @@ public class MemberRequestDto {
 
             @Schema(description = "기수명", example = "PANGYO_1", allowableValues = {"PANGYO_1", "PANGYO_2", "JEJU_1", "JEJU_2", "JEJU_3"})
             @NotNull(message = "기수는 필수 입력값입니다.")
-            String className,
+            String class_name,
 
             @Schema(description = "GitHub 프로필 URL", example = "https://github.com/gildong")
             @Pattern(regexp = "^(https://github\\.com/)[A-Za-z0-9_-]+(/)?.*$",
                     message = "GitHub URL 형식이 올바르지 않습니다. https://github.com/{username} 형식이어야 합니다.")
-            String githubUrl
+            String github_url
     ) {}
 
     @Schema(description = "이메일 인증 코드 요청 DTO")
