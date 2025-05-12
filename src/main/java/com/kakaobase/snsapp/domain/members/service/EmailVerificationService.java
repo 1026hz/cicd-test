@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.members.service;
 
+import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
 import com.kakaobase.snsapp.domain.members.exception.MemberErrorCode;
 import com.kakaobase.snsapp.domain.members.exception.MemberException;
 import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
@@ -9,7 +10,6 @@ import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -43,11 +43,11 @@ public class EmailVerificationService {
      *
      * @param email 인증할 이메일
      * @param purpose 인증 목적 (ex. 회원가입, 비밀번호 재설정 등)
-     * @param authentication 인증 객체 (비밀번호 재설정 시 필요)
+     * @param userDetails 인증 객체 (비밀번호 재설정 시 필요)
      */
-    public void sendVerificationCode(String email, String purpose, Authentication authentication) {
+    public void sendVerificationCode(String email, String purpose, CustomUserDetails userDetails) {
         // 요청 유효성 검증
-        validateEmailRequest(email, purpose, authentication);
+        validateEmailRequest(email, purpose, userDetails);
 
         // 인증 코드 생성 및 저장
         String code = generateCode();
@@ -57,6 +57,7 @@ public class EmailVerificationService {
         // 이메일 전송
         emailSender.sendVerificationEmail(email, code);
         log.info("Verification code sent to: {}, purpose: {}", email, purpose);
+
     }
 
     /**
@@ -64,9 +65,8 @@ public class EmailVerificationService {
      *
      * @param email 인증 이메일
      * @param code 사용자 입력 코드
-     * @param authentication 인증 객체 (인증 시 로그인 여부 확인용)
      */
-    public void verifyCode(String email, String code, Authentication authentication) {
+    public void verifyCode(String email, String code) {
         VerificationData data = verificationStore.get(email);
 
         // 인증 정보가 없거나 만료되었으면 예외 발생
@@ -106,18 +106,19 @@ public class EmailVerificationService {
      *
      * @param email 요청 이메일
      * @param purpose 인증 목적
-     * @param authentication 로그인 인증 객체
+     * @param userDetails 로그인 인증 객체
      */
-    private void validateEmailRequest(String email, String purpose, Authentication authentication) {
-        if ("password-reset".equals(purpose)) {
-            if (authentication == null) {
+    private void validateEmailRequest(String email, String purpose, CustomUserDetails userDetails) {
+        if(purpose.equals("password-reset")) {
+            if (userDetails == null) {
                 throw new CustomException(MemberErrorCode.UNAUTHORIZED_ACCESS);
             }
             if (!memberRepository.existsByEmail(email)) {
                 throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
             }
-        } else if ("sign-up".equals(purpose)) {
-            if (memberRepository.existsByEmail(email)) {
+        }
+        else if(purpose.equals("sign-up")) {
+            if(memberRepository.existsByEmail(email)) {
                 throw new MemberException(GeneralErrorCode.RESOURCE_ALREADY_EXISTS, "email");
             }
         }
