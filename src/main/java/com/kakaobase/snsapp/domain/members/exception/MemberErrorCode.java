@@ -17,7 +17,6 @@ public enum MemberErrorCode implements BaseErrorCode {
     // 이메일 인증 관련 에러
     EMAIL_VERIFICATION_FAILED(HttpStatus.UNAUTHORIZED, "email_verification_failed", "이메일 인증이 완료되지 않았습니다.", "email"),
     EMAIL_CODE_INVALID(HttpStatus.BAD_REQUEST, "email_code_invalid", "인증 코드가 유효하지 않습니다.", "code"),
-    EMAIL_CODE_FAIL_LOGOUT(HttpStatus.UNAUTHORIZED, "email_code_fail_logout", "인증에 3회 실패하여 로그아웃되었습니다.", "code"),
     EMAIL_CODE_EXPIRED(HttpStatus.GONE, "email_code_expired", "인증 코드가 만료되었습니다.", "code"),
 
     // 회원 가입/조회 관련 에러
