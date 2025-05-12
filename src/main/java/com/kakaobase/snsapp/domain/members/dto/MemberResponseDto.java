@@ -42,40 +42,4 @@ public class MemberResponseDto {
             @Schema(description = "팔로우 여부 (로그인한 사용자가 조회 대상을 팔로우했는지)", example = "false")
             Boolean isFollowing
     ) {}
-
-    @Schema(description = "이메일 인증 코드 검증 실패 응답 DTO")
-    public record EmailVerificationFailure(
-            @Schema(description = "에러 코드", example = "email_code_invalid")
-            String error,
-
-            @Schema(description = "에러 메시지", example = "인증 코드가 유효하지 않습니다.")
-            String message,
-
-            @Schema(description = "에러 필드", example = "code")
-            String field,
-
-            @Schema(description = "실패 횟수", example = "2")
-            Integer failCount,
-
-            @Schema(description = "최대 실패 횟수", example = "3")
-            Integer maxFailCount
-    ) {}
-
-    @Schema(description = "로그아웃 응답 DTO (3회 실패 시)")
-    public record EmailVerificationFailureLogout(
-            @Schema(description = "에러 코드", example = "email_code_fail_logout")
-            String error,
-
-            @Schema(description = "에러 메시지", example = "인증에 3회 실패하여 로그아웃되었습니다.")
-            String message,
-
-            @Schema(description = "에러 필드", example = "code")
-            String field,
-
-            @Schema(description = "실패 횟수", example = "3")
-            Integer failCount,
-
-            @Schema(description = "최대 실패 횟수", example = "3")
-            Integer maxFailCount
-    ) {}
 }
