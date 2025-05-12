@@ -78,10 +78,6 @@ public class EmailVerificationService {
         // 코드 불일치 시 시도 횟수 증가 및 예외 처리
         if (!data.getCode().equals(code)) {
             data.incrementAttempts();
-            if (data.getAttempts() >= MAX_ATTEMPTS) {
-                verificationStore.remove(email);
-                throw new MemberException(MemberErrorCode.EMAIL_CODE_FAIL_LOGOUT);
-            }
             throw new MemberException(MemberErrorCode.EMAIL_CODE_INVALID);
         }
 
