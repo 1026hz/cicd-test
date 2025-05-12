@@ -85,7 +85,7 @@ public class BotPostService {
         // 게시글 작성자들의 정보를 한 번에 조회
         Map<Long, Map<String, String>> memberInfoMap = postService.getMemberInfoByPosts(posts);
 
-        List<BotRequestDto.BotPost> botPosts = posts.stream()
+        List<BotRequestDto.PostDto> botPosts = posts.stream()
                 .map(post -> {
                     Map<String, String> memberInfo = memberInfoMap.get(post.getMemberId());
                     if (memberInfo == null) {
@@ -96,8 +96,8 @@ public class BotPostService {
                     // 현재 PostService의 getMemberInfo가 className을 포함하지 않을 수 있음
                     String className = memberInfo.getOrDefault("className", "UNKNOWN");
 
-                    return new BotRequestDto.BotPost(
-                            new BotRequestDto.BotUser(
+                    return new BotRequestDto.PostDto(
+                            new BotRequestDto.UserDto(
                                     memberInfo.get("nickname"),
                                     className
                             ),

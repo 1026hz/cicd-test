@@ -8,6 +8,7 @@ import com.kakaobase.snsapp.domain.comments.entity.Recomment;
 import com.kakaobase.snsapp.domain.comments.event.CommentCreatedEvent;
 import com.kakaobase.snsapp.domain.comments.exception.CommentErrorCode;
 import com.kakaobase.snsapp.domain.comments.exception.CommentException;
+import com.kakaobase.snsapp.domain.comments.repository.CommentLikeRepository;
 import com.kakaobase.snsapp.domain.comments.repository.CommentRepository;
 import com.kakaobase.snsapp.domain.comments.repository.RecommentRepository;
 import com.kakaobase.snsapp.domain.members.entity.Member;
@@ -42,6 +43,7 @@ public class CommentService {
     private final ApplicationEventPublisher eventPublisher;
 
     private static final int DEFAULT_PAGE_SIZE = 12;
+    private final CommentLikeRepository commentLikeRepository;
 
     /**
      * 댓글을 생성합니다.
@@ -221,7 +223,7 @@ public class CommentService {
                 .collect(Collectors.toList());
 
         // 댓글 좋아요 정보 조회
-        List<Long> likedCommentIds = commentRepository.findLikedCommentIds(commentIds, memberId);
+        List<Long> likedCommentIds = commentLikeRepository.findCommentIdsByMemberId(memberId);
         Set<Long> likedCommentIdsSet = new HashSet<>(likedCommentIds);
 
         // 응답 DTO 생성
@@ -296,7 +298,7 @@ public class CommentService {
                 .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId", "댓글을 찾을 수 없습니다."));
 
         // 댓글 좋아요 여부 확인
-        boolean isLiked = commentRepository.existsCommentLike(commentId, memberId);
+        boolean isLiked = commentLikeRepository.existsByMemberIdAndCommentId(memberId, commentId);
 
         // 댓글 작성자 확인 (본인 작성 여부)
         boolean isMine = comment.getMember().getId().equals(memberId);

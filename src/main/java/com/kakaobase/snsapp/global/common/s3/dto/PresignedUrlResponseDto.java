@@ -27,7 +27,7 @@ public class PresignedUrlResponseDto {
     @Schema(description = "S3에 파일을 업로드하기 위한 Presigned URL",
             example = "https://my-bucket.s3.amazonaws.com/uploads/cat.jpg?AWSAccessKeyId=...",
             required = true)
-    private String presinged_url;
+    private String presigned_url;
 
     /**
      * 이미지 접근 URL
