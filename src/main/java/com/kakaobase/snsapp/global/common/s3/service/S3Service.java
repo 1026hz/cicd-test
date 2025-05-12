@@ -100,7 +100,7 @@ public class S3Service {
             String imageUrl = generateImageUrl(objectKey);
 
             return PresignedUrlResponseDto.builder()
-                    .presinged_url(presignedUrl.toString())
+                    .presigned_url(presignedUrl.toString())
                     .image_url(imageUrl)
                     .expires_in(expirationTime)
                     .build();
