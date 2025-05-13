@@ -101,6 +101,10 @@ public class PostResponseDto {
             @JsonProperty("youtube_url")
             String youtubeUrl,
 
+            @Schema(description = "유튜브 요약본", example = "안녕하세요 침착맨입니다~")
+            @JsonProperty("youtube_summary")
+            String youtubeSummary,
+
             @Schema(description = "생성 시간", example = "2024-04-23T10:00:00Z")
             @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
             @JsonProperty("created_at")
