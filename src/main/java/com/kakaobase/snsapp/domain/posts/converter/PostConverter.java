@@ -93,7 +93,8 @@ public class PostConverter {
         );
 
         // 이미지 URL 가져오기 (첫 번째 이미지만 사용)
-        String imageUrl = postImages.getFirst().getImgUrl().toString();
+        String imageUrl = postImages.isEmpty() ? null : postImages.get(0).getImgUrl().toString();
+
 
         // 상세 정보 생성
         PostResponseDto.PostDetail data = new PostResponseDto.PostDetail(
