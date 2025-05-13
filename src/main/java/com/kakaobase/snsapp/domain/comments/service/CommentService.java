@@ -194,7 +194,22 @@ public class CommentService {
      * @param pageRequest 페이지 요청 DTO
      * @return 댓글 목록 응답 DTO
      */
-    // CommentService.java
+    /**
+     * 게시글에 달린 댓글 목록을 조회합니다.
+     *
+     * @param memberId 현재 로그인한 회원 ID
+     * @param postId 조회할 게시글 ID
+     * @param pageRequest 페이지 요청 정보
+     * @return 댓글 목록 응답 DTO
+     */
+    /**
+     * 게시글에 달린 댓글 목록을 조회합니다.
+     *
+     * @param memberId 현재 로그인한 회원 ID
+     * @param postId 조회할 게시글 ID
+     * @param pageRequest 페이지 요청 정보
+     * @return 댓글 목록 응답 DTO
+     */
     public CommentResponseDto.CommentListResponse getCommentsByPostId(Long memberId, Long postId, CommentRequestDto.CommentPageRequest pageRequest) {
         // 게시글 존재 확인
         Post post = postService.findById(postId);
@@ -203,7 +218,7 @@ public class CommentService {
         int limit = pageRequest.limit() != null ? pageRequest.limit() : DEFAULT_PAGE_SIZE;
 
         // 댓글 목록 조회
-        List<Comment> comments = commentRepository.findByPostIdWithCursor(postId, pageRequest.cursor(), limit);
+        List<Comment> comments = commentRepository.findByPostIdWithCursor(postId, pageRequest.cursor(), limit + 1); // 다음 페이지 확인을 위해 limit + 1개 조회
 
         if (comments.isEmpty()) {
             return new CommentResponseDto.CommentListResponse(
@@ -214,23 +229,23 @@ public class CommentService {
         }
 
         // 다음 페이지 존재 여부 확인
-        boolean hasNext = comments.size() >= limit;
-        Long nextCursor = hasNext ? comments.get(comments.size() - 1).getId() : null;
+        boolean hasNext = comments.size() > limit;
 
-        // 댓글 ID 추출
-        List<Long> commentIds = comments.stream()
-                .map(Comment::getId)
+        // 실제 반환할 댓글 목록 (limit개로 제한)
+        List<Comment> pageComments = hasNext ? comments.subList(0, limit) : comments;
+
+        // 다음 커서 설정
+        Long nextCursor = hasNext ? pageComments.get(pageComments.size() - 1).getId() : null;
+
+        // 개별 댓글 정보를 가져와서 CommentInfo 리스트 생성
+        List<CommentResponseDto.CommentInfo> commentInfoList = pageComments.stream()
+                .map(comment -> getCommentInfo(memberId, comment.getId()))
                 .collect(Collectors.toList());
 
-        // 댓글 좋아요 정보 조회
-        List<Long> likedCommentIds = commentLikeRepository.findCommentIdsByMemberId(memberId);
-        Set<Long> likedCommentIdsSet = new HashSet<>(likedCommentIds);
-
-        // 응답 DTO 생성
-        return commentConverter.toCommentListResponse(
-                comments,
-                memberId,
-                likedCommentIdsSet,
+        // CommentListResponse 생성하여 반환
+        return new CommentResponseDto.CommentListResponse(
+                commentInfoList,
+                hasNext,
                 nextCursor
         );
     }
@@ -285,14 +300,20 @@ public class CommentService {
         );
     }
 
+    public CommentResponseDto.CommentDetailResponse getCommentDetail(Long memberId, Long commentId) {
+        CommentResponseDto.CommentInfo commentInfo = getCommentInfo(memberId, commentId);
+        return new CommentResponseDto.CommentDetailResponse(commentInfo);
+    }
+
+
     /**
-     * 댓글 상세 정보를 조회합니다.
+     * 댓글 정보를 반환
      *
      * @param memberId 현재 로그인한 회원 ID
      * @param commentId 조회할 댓글 ID
      * @return 댓글 상세 응답 DTO
      */
-    public CommentResponseDto.CommentDetailResponse getCommentDetail(Long memberId, Long commentId) {
+    public CommentResponseDto.CommentInfo getCommentInfo(Long memberId, Long commentId) {
         // 댓글 조회
         Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
                 .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId", "댓글을 찾을 수 없습니다."));
@@ -303,27 +324,14 @@ public class CommentService {
         // 댓글 작성자 확인 (본인 작성 여부)
         boolean isMine = comment.getMember().getId().equals(memberId);
 
-        // UserInfo 생성
-        Member commentAuthor = comment.getMember();
-        CommentResponseDto.UserInfo userInfo = new CommentResponseDto.UserInfo(
-                commentAuthor.getId(),
-                commentAuthor.getNickname(),
-                commentAuthor.getProfileImgUrl(),
-                false  // is_followed는 일단 false로 설정 (팔로우 서비스와 연동 필요)
-        );
-
         // CommentInfo 생성
-        CommentResponseDto.CommentInfo commentInfo = new CommentResponseDto.CommentInfo(
-                comment.getId(),
-                userInfo,
-                comment.getContent(),
-                comment.getCreatedAt(),
-                comment.getLikeCount(),
+        CommentResponseDto.CommentInfo commentInfo = commentConverter.toCommentInfo(
+                comment,
                 isMine,
                 isLiked
         );
 
-        return new CommentResponseDto.CommentDetailResponse(commentInfo);
+        return commentInfo;
     }
 
     /**

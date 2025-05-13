@@ -84,6 +84,9 @@ public class CommentResponseDto {
             @Schema(description = "좋아요 수", example = "3")
             int like_count,
 
+            @Schema(description = "대댓글 수", example = "3")
+            int recomment_count,
+
             @Schema(description = "본인 작성 여부", example = "true")
             boolean is_mine,
 
@@ -182,18 +185,4 @@ public class CommentResponseDto {
             String message
     ) {}
 
-    /**
-     * 에러 응답 DTO
-     */
-    @Schema(description = "에러 응답")
-    public record ErrorResponse(
-            @Schema(description = "에러 코드", example = "resource_not_found")
-            String error,
-
-            @Schema(description = "에러 메시지", example = "해당 댓글을 찾을 수 없습니다.")
-            String message,
-
-            @Schema(description = "에러가 발생한 필드", example = "commentId", nullable = true)
-            String field
-    ) {}
 }
