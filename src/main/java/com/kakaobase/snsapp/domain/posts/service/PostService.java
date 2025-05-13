@@ -338,6 +338,12 @@ public class PostService {
             throw new PostException(GeneralErrorCode.INVALID_FORMAT, "youtubeUrl");
         }
 
+        //4. YouTube Summary가 이미 존재하는 지 확인
+        String youtubeSummary = post.getYoutubeSummary();
+        if(youtubeSummary != null) {
+            return new PostResponseDto.YouTubeSummaryResponse(youtubeSummary);
+        }
+
         // 4. AI 서버에 요약 요청
         log.info("AI 서버에 YouTube 요약 요청 - postId: {}, url: {}", postId, youtubeUrl);
         String summary = youtubeSummaryService.getSummary(youtubeUrl);
@@ -349,56 +355,4 @@ public class PostService {
         // 6. 응답 생성
         return PostResponseDto.YouTubeSummaryResponse.of(summary);
     }
-
-//    /**
-//     * 게시글에 좋아요한 사용자 목록을 조회합니다.
-//     *
-//     * @param posts 게시글 목록
-//     * @param limit 조회할 사용자 수 제한
-//     * @return 게시글 ID를 키로 하고 좋아요한 사용자 닉네임 목록을 값으로 하는 맵
-//     */
-//    public Map<Long, List<String>> getWhoLikedPosts(List<Post> posts, int limit) {
-//        Map<Long, List<String>> result = new HashMap<>();
-//
-//        for (Post post : posts) {
-//            List<String> whoLiked = postLikeService.findWhoLikedPost(post.getId(), limit);
-//            result.put(post.getId(), whoLiked);
-//        }
-//
-//        return result;
-//    }
-
-//    /**
-//     * 사용자가 팔로우하는 회원 ID 목록을 조회합니다.
-//     *
-//     * @param memberId 사용자 ID
-//     * @return 팔로우하는 회원 ID 목록
-//     */
-//    public List<Long> getFollowingIds(Long memberId) {
-//        return followService.getFollowingIds(memberId);
-//    }
-//
-//    /**
-//     * 사용자가 특정 회원을 팔로우하는지 확인합니다.
-//     *
-//     * @param memberId 사용자 ID
-//     * @param targetId 대상 회원 ID
-//     * @return 팔로우 여부
-//     */
-//    public boolean isFollowing(Long memberId, Long targetId) {
-//        return followService.isFollowing(memberId, targetId);
-//    }
-//
-//    /**
-//     * 유튜브 요약 내용을 업데이트합니다.`
-//     *
-//     * @param postId 게시글 ID
-//     * @param summary 요약 내용
-//     */
-//    @Transactional
-//    public void updateYoutubeSummary(Long postId, String summary) {
-//        Post post = findById(postId);
-//        post.updateYoutubeSummary(summary);
-//        log.info("유튜브 요약 업데이트 완료: 게시글 ID={}", postId);
-//    }
 }
