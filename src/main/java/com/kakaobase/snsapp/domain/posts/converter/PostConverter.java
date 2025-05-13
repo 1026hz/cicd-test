@@ -153,6 +153,7 @@ public class PostConverter {
                 post.getContent(),
                 imageUrl,
                 post.getYoutubeUrl(),
+                post.getYoutubeSummary(),
                 post.getCreatedAt(),
                 post.getLikeCount(),
                 post.getCommentCount(),

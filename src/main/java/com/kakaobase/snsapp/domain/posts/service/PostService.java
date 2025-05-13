@@ -165,6 +165,9 @@ public class PostService {
     /**
      * 게시글 목록을 조회합니다.
      */
+    /**
+     * 게시글 목록을 조회합니다.
+     */
     public PostResponseDto.PostListResponse getPostList(String postType, int limit, Long cursor, Long currentMemberId) {
         // 1. 유효성 검증
         if (limit < 1) {
@@ -180,29 +183,27 @@ public class PostService {
         // 4. 작성자 정보 조회
         Map<Long, Map<String, String>> memberInfoMap = getMemberInfoByPosts(posts);
 
-        // 5. 좋아요 정보 조회
+        // 5. 게시글의 첫 번째 이미지 URL 조회
+        Map<Long, String> firstImageUrlMap = findFirstImageUrlsByPosts(posts);
+
+
+        // 7. 팔로우 정보 조회
+        List<Long> followingIds = List.of();
+
+        // 8. 좋아요 정보 조회
         List<Long> likedPostIds = currentMemberId != null
                 ? postLikeService.findLikedPostIdsByMember(currentMemberId, posts)
                 : List.of();
 
-        // 6. 팔로우 정보 조회 (현재는 미구현)
-        List<Long> followingIds = List.of();
-
-        // 7. 게시글별 좋아요한 사용자 목록 조회 (현재는 미구현)
-        Map<Long, List<String>> whoLikedMap = Map.of();
-
-        // 8. 각 게시글의 첫 번째 이미지 URL 조회
-        Map<Long, String> firstImageUrlMap = findFirstImageUrlsByPosts(posts);
-
-        // 9. Entity → DTO 변환
+        // 9. PostListItem 변환 (createPostListItem 메서드 활용)
         List<PostResponseDto.PostListItem> items = posts.stream()
-                .map(post -> PostConverter.toPostListItem(
+                .map(post -> createPostListItem(
                         post,
-                        memberInfoMap.get(post.getMemberId()),
-                        firstImageUrlMap.get(post.getId()), // 이미지 URL 전달
-                        likedPostIds.contains(post.getId()),
-                        followingIds.contains(post.getMemberId()),
-                        currentMemberId != null && currentMemberId.equals(post.getMemberId())
+                        memberInfoMap,
+                        firstImageUrlMap.get(post.getId()),
+                        likedPostIds,
+                        followingIds,
+                        currentMemberId
                 ))
                 .collect(Collectors.toList());
 
@@ -216,9 +217,10 @@ public class PostService {
     private PostResponseDto.PostListItem createPostListItem(
             Post post,
             Map<Long, Map<String, String>> memberInfoMap,
+            String firstImageUrl,
             List<Long> likedPostIds,
             List<Long> followingIds,
-            Long myId) {
+            Long currentMemberId) {
 
         // 회원 정보 조회
         Map<String, String> userInfo = memberInfoMap.get(post.getMemberId());
@@ -231,19 +233,17 @@ public class PostService {
                 followingIds.contains(post.getMemberId())
         );
 
-        // 첫 번째 이미지 URL 조회
-        String imageUrl = postImageRepository.findByPostIdOrderBySortIndexAsc(post.getId()).getFirst().getImgUrl().toString();
-
         // 본인 게시글 여부 및 좋아요 여부 확인
-        boolean isMine = myId != null && myId.equals(post.getMemberId());
+        boolean isMine = currentMemberId != null && currentMemberId.equals(post.getMemberId());
         boolean isLiked = likedPostIds.contains(post.getId());
 
         return new PostResponseDto.PostListItem(
                 post.getId(),
                 user,
                 post.getContent(),
-                imageUrl,
+                firstImageUrl,  // 변경: 미리 조회한 이미지 URL 사용
                 post.getYoutubeUrl(),
+                post.getYoutubeSummary(),
                 post.getCreatedAt(),
                 post.getLikeCount(),
                 post.getCommentCount(),
@@ -338,6 +338,12 @@ public class PostService {
             throw new PostException(GeneralErrorCode.INVALID_FORMAT, "youtubeUrl");
         }
 
+        //4. YouTube Summary가 이미 존재하는 지 확인
+        String youtubeSummary = post.getYoutubeSummary();
+        if(youtubeSummary != null) {
+            return new PostResponseDto.YouTubeSummaryResponse(youtubeSummary);
+        }
+
         // 4. AI 서버에 요약 요청
         log.info("AI 서버에 YouTube 요약 요청 - postId: {}, url: {}", postId, youtubeUrl);
         String summary = youtubeSummaryService.getSummary(youtubeUrl);
@@ -349,56 +355,4 @@ public class PostService {
         // 6. 응답 생성
         return PostResponseDto.YouTubeSummaryResponse.of(summary);
     }
-
-//    /**
-//     * 게시글에 좋아요한 사용자 목록을 조회합니다.
-//     *
-//     * @param posts 게시글 목록
-//     * @param limit 조회할 사용자 수 제한
-//     * @return 게시글 ID를 키로 하고 좋아요한 사용자 닉네임 목록을 값으로 하는 맵
-//     */
-//    public Map<Long, List<String>> getWhoLikedPosts(List<Post> posts, int limit) {
-//        Map<Long, List<String>> result = new HashMap<>();
-//
-//        for (Post post : posts) {
-//            List<String> whoLiked = postLikeService.findWhoLikedPost(post.getId(), limit);
-//            result.put(post.getId(), whoLiked);
-//        }
-//
-//        return result;
-//    }
-
-//    /**
-//     * 사용자가 팔로우하는 회원 ID 목록을 조회합니다.
-//     *
-//     * @param memberId 사용자 ID
-//     * @return 팔로우하는 회원 ID 목록
-//     */
-//    public List<Long> getFollowingIds(Long memberId) {
-//        return followService.getFollowingIds(memberId);
-//    }
-//
-//    /**
-//     * 사용자가 특정 회원을 팔로우하는지 확인합니다.
-//     *
-//     * @param memberId 사용자 ID
-//     * @param targetId 대상 회원 ID
-//     * @return 팔로우 여부
-//     */
-//    public boolean isFollowing(Long memberId, Long targetId) {
-//        return followService.isFollowing(memberId, targetId);
-//    }
-//
-//    /**
-//     * 유튜브 요약 내용을 업데이트합니다.`
-//     *
-//     * @param postId 게시글 ID
-//     * @param summary 요약 내용
-//     */
-//    @Transactional
-//    public void updateYoutubeSummary(Long postId, String summary) {
-//        Post post = findById(postId);
-//        post.updateYoutubeSummary(summary);
-//        log.info("유튜브 요약 업데이트 완료: 게시글 ID={}", postId);
-//    }
 }
