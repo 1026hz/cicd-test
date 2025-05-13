@@ -165,6 +165,9 @@ public class PostService {
     /**
      * 게시글 목록을 조회합니다.
      */
+    /**
+     * 게시글 목록을 조회합니다.
+     */
     public PostResponseDto.PostListResponse getPostList(String postType, int limit, Long cursor, Long currentMemberId) {
         // 1. 유효성 검증
         if (limit < 1) {
@@ -180,29 +183,27 @@ public class PostService {
         // 4. 작성자 정보 조회
         Map<Long, Map<String, String>> memberInfoMap = getMemberInfoByPosts(posts);
 
-        // 5. 좋아요 정보 조회
+        // 5. 게시글의 첫 번째 이미지 URL 조회
+        Map<Long, String> firstImageUrlMap = findFirstImageUrlsByPosts(posts);
+
+
+        // 7. 팔로우 정보 조회
+        List<Long> followingIds = List.of();
+
+        // 8. 좋아요 정보 조회
         List<Long> likedPostIds = currentMemberId != null
                 ? postLikeService.findLikedPostIdsByMember(currentMemberId, posts)
                 : List.of();
 
-        // 6. 팔로우 정보 조회 (현재는 미구현)
-        List<Long> followingIds = List.of();
-
-        // 7. 게시글별 좋아요한 사용자 목록 조회 (현재는 미구현)
-        Map<Long, List<String>> whoLikedMap = Map.of();
-
-        // 8. 각 게시글의 첫 번째 이미지 URL 조회
-        Map<Long, String> firstImageUrlMap = findFirstImageUrlsByPosts(posts);
-
-        // 9. Entity → DTO 변환
+        // 9. PostListItem 변환 (createPostListItem 메서드 활용)
         List<PostResponseDto.PostListItem> items = posts.stream()
-                .map(post -> PostConverter.toPostListItem(
+                .map(post -> createPostListItem(
                         post,
-                        memberInfoMap.get(post.getMemberId()),
-                        firstImageUrlMap.get(post.getId()), // 이미지 URL 전달
-                        likedPostIds.contains(post.getId()),
-                        followingIds.contains(post.getMemberId()),
-                        currentMemberId != null && currentMemberId.equals(post.getMemberId())
+                        memberInfoMap,
+                        firstImageUrlMap.get(post.getId()),
+                        likedPostIds,
+                        followingIds,
+                        currentMemberId
                 ))
                 .collect(Collectors.toList());
 
@@ -216,9 +217,10 @@ public class PostService {
     private PostResponseDto.PostListItem createPostListItem(
             Post post,
             Map<Long, Map<String, String>> memberInfoMap,
+            String firstImageUrl,
             List<Long> likedPostIds,
             List<Long> followingIds,
-            Long myId) {
+            Long currentMemberId) {
 
         // 회원 정보 조회
         Map<String, String> userInfo = memberInfoMap.get(post.getMemberId());
@@ -231,19 +233,17 @@ public class PostService {
                 followingIds.contains(post.getMemberId())
         );
 
-        // 첫 번째 이미지 URL 조회
-        String imageUrl = postImageRepository.findByPostIdOrderBySortIndexAsc(post.getId()).getFirst().getImgUrl().toString();
-
         // 본인 게시글 여부 및 좋아요 여부 확인
-        boolean isMine = myId != null && myId.equals(post.getMemberId());
+        boolean isMine = currentMemberId != null && currentMemberId.equals(post.getMemberId());
         boolean isLiked = likedPostIds.contains(post.getId());
 
         return new PostResponseDto.PostListItem(
                 post.getId(),
                 user,
                 post.getContent(),
-                imageUrl,
+                firstImageUrl,  // 변경: 미리 조회한 이미지 URL 사용
                 post.getYoutubeUrl(),
+                post.getYoutubeSummary(),
                 post.getCreatedAt(),
                 post.getLikeCount(),
                 post.getCommentCount(),
