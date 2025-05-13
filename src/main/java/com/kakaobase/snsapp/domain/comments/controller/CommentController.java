@@ -164,7 +164,7 @@ public class CommentController {
     /**
      * 댓글 좋아요 추가 API
      */
-    @PostMapping("/comments/{commentId}/like")
+    @PostMapping("/comments/{commentId}/likes")
     @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "댓글 좋아요 추가",
@@ -189,7 +189,7 @@ public class CommentController {
     /**
      * 댓글 좋아요 취소 API
      */
-    @DeleteMapping("/comments/{commentId}/like")
+    @DeleteMapping("/comments/{commentId}/likes")
     @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "댓글 좋아요 취소",
@@ -214,7 +214,7 @@ public class CommentController {
     /**
      * 대댓글 좋아요 추가 API
      */
-    @PostMapping("/recomments/{recommentId}/like")
+    @PostMapping("/recomments/{recommentId}/likes")
     @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "대댓글 좋아요 추가",
@@ -239,7 +239,7 @@ public class CommentController {
     /**
      * 대댓글 좋아요 취소 API
      */
-    @DeleteMapping("/recomments/{recommentId}/like")
+    @DeleteMapping("/recomments/{recommentId}/likes")
     @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "대댓글 좋아요 취소",
