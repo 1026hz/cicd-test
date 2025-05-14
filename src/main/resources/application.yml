@@ -34,7 +34,6 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    secure: false
     issuer: kakaobase
     audience: web
     access:
@@ -55,16 +54,6 @@ cloud:
       bucket: ${BUCKET_NAME}      # 사용할 S3 버킷 이름
       expiration-time: 300             # Presigned URL 만료 시간(초)
       max-file-size: 10485760          # 최대 파일 크기 (10MB)
-
-# S3 사용 시 발생할 수 있는 로깅 제어 (선택사항)
-logging:
-  level:
-    com.amazonaws.util.EC2MetadataUtils: ERROR # EC2 메타데이터 관련 로그 수준 조정
-    com.amazonaws.services.s3: INFO            # S3 서비스 관련 로그 수준
-    com.kakaobase.snsapp.global.security: DEBUG
-    com.kakaobase.snsapp.domain.auth: DEBUG
-    com.kakaobase.snsapp.domain.posts: DEBUG
-    org.springframework.security: DEBUG
 
 springdoc:
   api-docs:
