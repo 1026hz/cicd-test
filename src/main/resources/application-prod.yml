@@ -1,0 +1,15 @@
+spring:
+  profiles: prod
+
+app:
+  jwt:
+    secure: false
+
+logging:
+  level:
+    com.amazonaws.util.EC2MetadataUtils: ERROR
+    com.amazonaws.services.s3: INFO
+    com.kakaobase.snsapp.global.security: INFO
+    com.kakaobase.snsapp.domain.auth: INFO
+    com.kakaobase.snsapp.domain.posts: INFO
+    org.springframework.security: INFO
