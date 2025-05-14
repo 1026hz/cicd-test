@@ -34,7 +34,7 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    secure: true
+    secure: false
     issuer: kakaobase
     audience: web
     access:
