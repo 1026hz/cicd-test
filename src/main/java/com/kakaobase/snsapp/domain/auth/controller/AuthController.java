@@ -2,8 +2,12 @@ package com.kakaobase.snsapp.domain.auth.controller;
 
 import com.kakaobase.snsapp.domain.auth.dto.AuthRequestDto;
 import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
+import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
+import com.kakaobase.snsapp.domain.auth.service.SecurityTokenManager;
 import com.kakaobase.snsapp.domain.auth.service.UserAuthenticationService;
+import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
+import com.kakaobase.snsapp.global.error.exception.CustomException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +34,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserAuthenticationService userAuthenticationService;
+    private final CookieUtil cookieUtil;
+    private final SecurityTokenManager securityTokenManager;
 
     /**
      * 로그인 API
@@ -58,6 +64,14 @@ public class AuthController {
             HttpServletResponse httpResponse) {
 
         log.info("로그인 요청: {}", request.email());
+
+        // 쿠키에서 리프레시 토큰 추출
+        String cookieValue = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
+
+        // 토큰이 있다면 기존 토큰 파기
+        if (cookieValue != null) {
+            securityTokenManager.revokeRefreshToken(cookieValue);
+        }
 
         // 로그인 처리 및 토큰 발급
         AuthResponseDto.LoginResponse result = userAuthenticationService.login(
