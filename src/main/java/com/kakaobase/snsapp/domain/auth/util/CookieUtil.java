@@ -2,6 +2,7 @@ package com.kakaobase.snsapp.domain.auth.util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -29,27 +30,19 @@ public class CookieUtil {
 
     /**
      * 리프레시 토큰을 담은 쿠키를 생성합니다.
-     * 생성된 쿠키는 JavaScript에서 접근할 수 없도록 HttpOnly로 설정되며,
-     * 특정 경로(/auth/tokens/refresh)에서만 전송되도록 설정됩니다.
-     *
-     * @param refreshToken 리프레시 토큰 값
-     * @return 생성된 쿠키
+     * 생성된 쿠키는 JavaScript에서 접근할 수 없도록 HttpOnly로 설정
      */
-    public Cookie createRefreshTokenCookie(String refreshToken) {
-        // 토큰을 담은 쿠키 객체 생성
-        Cookie cookie = new Cookie(refreshTokenCookieName, refreshToken);
+    public void createRefreshTokenCookie(String refreshToken, HttpServletResponse response) {
 
-        // 쿠키 만료 시간 설정 (초 단위로 변환)
-        cookie.setMaxAge((int) (refreshTokenExpiration / 1000));
+        // 수동으로 SameSite=None 주입
+        StringBuilder cookieValue = new StringBuilder()
+                .append(refreshTokenCookieName).append("=").append(refreshToken)
+                .append("; Path=").append(refreshTokenCookiePath)
+                .append("; Max-Age=").append(refreshTokenExpiration / 1000)
+                .append("; HttpOnly")
+                .append("; Secure; SameSite=None");
 
-        // 쿠키 경로 설정 (토큰 재발급 엔드포인트로 제한)
-        cookie.setPath(refreshTokenCookiePath);
-
-        // 보안 설정
-        cookie.setHttpOnly(true);     // JavaScript에서 접근 불가
-        cookie.setSecure(secureCookie); // HTTPS에서만 전송 (프로덕션 환경)
-
-        return cookie;
+        response.addHeader("Set-Cookie", cookieValue.toString());
     }
 
     /**
