@@ -3,7 +3,7 @@ spring:
 
 app:
   jwt:
-    secure: false
+    secure: true
 
 logging:
   level:
