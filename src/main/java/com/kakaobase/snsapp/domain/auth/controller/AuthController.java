@@ -2,14 +2,8 @@ package com.kakaobase.snsapp.domain.auth.controller;
 
 import com.kakaobase.snsapp.domain.auth.dto.AuthRequestDto;
 import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
-import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
-import com.kakaobase.snsapp.domain.auth.exception.AuthException;
 import com.kakaobase.snsapp.domain.auth.service.UserAuthenticationService;
-import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
-import com.kakaobase.snsapp.domain.members.entity.Member;
-import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
-import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,8 +30,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserAuthenticationService userAuthenticationService;
-    private final CookieUtil cookieUtil;
-    private final MemberRepository memberRepository;
 
     /**
      * 로그인 API
@@ -68,25 +60,17 @@ public class AuthController {
         log.info("로그인 요청: {}", request.email());
 
         // 로그인 처리 및 토큰 발급
-        UserAuthenticationService.TokenWithCookie result = userAuthenticationService.login(
+        AuthResponseDto.LoginResponse result = userAuthenticationService.login(
                 request.email(),
                 request.password(),
-                httpRequest.getHeader("User-Agent")
+                httpRequest.getHeader("User-Agent"),
+                httpResponse
         );
-
-        // 리프레시 토큰을 쿠키에 설정
-        httpResponse.addCookie(result.refreshTokenCookie());
 
         log.info("로그인 성공: {}", request.email());
 
-        Member member = memberRepository.findByEmail(request.email())
-                .orElseThrow(()-> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, "email", "사용자의 이메일을 찾을 수 없습니다"));
-
         // 액세스 토큰을 응답 본문에 포함
-        return CustomResponse.success(
-                "로그인에 성공하였습니다.",
-                new AuthResponseDto.LoginResponse(result.accessToken(), member.getNickname(), member.getClassName())
-        );
+        return CustomResponse.success("로그인에 성공하였습니다.", result);
     }
 
     /**
