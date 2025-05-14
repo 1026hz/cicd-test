@@ -4,6 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,17 +34,18 @@ public class CookieUtil {
      * 생성된 쿠키는 JavaScript에서 접근할 수 없도록 HttpOnly로 설정
      */
     public void createRefreshTokenCookie(String refreshToken, HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from(refreshTokenCookieName, refreshToken)
+                .path(refreshTokenCookiePath)
+                .maxAge(refreshTokenExpiration / 1000)
+                .httpOnly(true)
+                .secure(secureCookie)
+                .sameSite("Lax")
+                .build();
 
-        // 수동으로 SameSite=None 주입
-        StringBuilder cookieValue = new StringBuilder()
-                .append(refreshTokenCookieName).append("=").append(refreshToken)
-                .append("; Path=").append(refreshTokenCookiePath)
-                .append("; Max-Age=").append(refreshTokenExpiration / 1000)
-                .append("; HttpOnly")
-                .append("; Secure; SameSite=None");
-
-        response.addHeader("Set-Cookie", cookieValue.toString());
+        response.addHeader("Set-Cookie", cookie.toString()); // 그대로 Set-Cookie 헤더로 추가
     }
+
+
 
     /**
      * HTTP 요청의 쿠키에서 리프레시 토큰을 추출합니다.
