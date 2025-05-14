@@ -1,6 +1,7 @@
 package com.kakaobase.snsapp.domain.auth.service;
 
 import com.kakaobase.snsapp.domain.auth.converter.AuthConverter;
+import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
 import com.kakaobase.snsapp.domain.auth.entity.AuthToken;
 import com.kakaobase.snsapp.domain.auth.entity.RevokedRefreshToken;
 import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
@@ -16,12 +17,10 @@ import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 import com.kakaobase.snsapp.global.security.jwt.JwtTokenProvider;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,7 +46,7 @@ public class UserAuthenticationService {
      * 사용자 로그인 처리 및 인증 토큰 발급
      */
     @Transactional
-    public TokenWithCookie login(String email, String password, String userAgent) {
+    public AuthResponseDto.LoginResponse login(String email, String password, String userAgent, HttpServletResponse response) {
         // 1. 이메일로 사용자 조회
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, email));
@@ -76,10 +75,11 @@ public class UserAuthenticationService {
         // 6. 액세스 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(authentication);
 
-        // 7. 리프레시 토큰 쿠키 생성
-        Cookie refreshTokenCookie = cookieUtil.createRefreshTokenCookie(refreshToken);
 
-        return new TokenWithCookie(accessToken, refreshTokenCookie);
+        // 7. 쿠키에 RefreshToken주입
+        cookieUtil.createRefreshTokenCookie(refreshToken, response);
+
+        return new AuthResponseDto.LoginResponse(accessToken, member.getNickname(), member.getClassName());
     }
 
     /**
@@ -146,10 +146,4 @@ public class UserAuthenticationService {
         }
         securityTokenManager.revokeAllTokensExcept(memberId, currentRefreshToken);
     }
-
-
-    /**
-     * 액세스 토큰과 리프레시 토큰 쿠키를 포함하는 응답 DTO
-     */
-    public record TokenWithCookie(String accessToken, Cookie refreshTokenCookie) {}
 }
