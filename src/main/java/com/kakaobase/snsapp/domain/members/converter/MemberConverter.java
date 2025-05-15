@@ -37,9 +37,9 @@ public class MemberConverter {
         // 회원 엔티티 생성 및 반환
         return Member.builder()
                 .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
                 .name(request.name())
                 .nickname(request.nickname())
+                .password(passwordEncoder.encode(request.password()))
                 .className(className)
                 .githubUrl(request.githubUrl())
                 .build();
