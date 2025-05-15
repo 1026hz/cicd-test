@@ -49,14 +49,30 @@ public class BotPostService {
             log.info("봇 게시글 생성 시작 - boardType: {}", boardType);
 
             // 1. 최근 5개 게시글 조회
-            List<Post> recentPosts = postService.findByCursor(boardType, 5, null);
-            if (recentPosts.size() < 5) {
-                log.warn("게시글이 5개 미만입니다. 봇 게시글 생성을 건너뜁니다. - count: {}", recentPosts.size());
+            List<Post> recentPosts = postService.findByCursor(boardType, 6, null);
+
+
+            List<Post> filteredPosts = List.of();
+            for(Post post : recentPosts) {
+                if(post.getMemberId() != BotConstants.BOT_MEMBER_ID){
+                    filteredPosts.addFirst(post);
+                }
+            }
+
+            if(filteredPosts.size() > 5){
+                while (filteredPosts.size() != 5) {
+                    filteredPosts.remove(0);
+                }
+            }
+
+            else if (filteredPosts.size() < 5) {
+                log.warn("게시글이 5개미만입니다. 봇 게시글 생성을 건너뜁니다. - count: {}", filteredPosts.size());
                 return null;
             }
 
+
             // 2. AI 서버 요청 DTO 생성
-            BotRequestDto.CreatePostRequest request = createBotRequest(boardType, recentPosts);
+            BotRequestDto.CreatePostRequest request = createBotRequest(boardType, filteredPosts);
 
             // 3. AI 서버 호출
             BotRequestDto.AiPostResponse aiResponse = callAiServer(request);
@@ -139,6 +155,12 @@ public class BotPostService {
     private PostResponseDto.PostCreateResponse saveBotPost(BotRequestDto.AiPostResponse aiResponse) {
         BotRequestDto.AiResponseData data = aiResponse.data();
 
+        PostRequestDto.PostCreateRequestDto requestDto = new PostRequestDto.PostCreateRequestDto(
+                data.content(),
+                null,
+                null
+        );
+
         // AI 응답 데이터를 사용하여 게시글 생성
         Post.BoardType boardType;
         try {
@@ -148,20 +170,14 @@ public class BotPostService {
             throw new RuntimeException("잘못된 게시판 타입", e);
         }
 
-        // 게시글 생성 요청 DTO 생성
-        PostRequestDto.PostCreateRequestDto createRequest = new PostRequestDto.PostCreateRequestDto(
-                data.content(),
-                null,  // image_url
-                null   // youtube_url
-        );
 
         // PostService를 통해 게시글 생성
-        Post savedPost = postService.createPost(boardType, createRequest, BotConstants.BOT_MEMBER_ID);
+        Post socialBotPost = postService.createPost(boardType, requestDto, BotConstants.BOT_MEMBER_ID);
 
         // 봇 멤버 정보 조회
         Map<String, String> botMemberInfo = postService.getMemberInfo(BotConstants.BOT_MEMBER_ID);
 
         // PostConverter를 사용하여 응답 생성
-        return PostConverter.toPostCreateResponse(savedPost, botMemberInfo, null, false);
+        return PostConverter.toPostCreateResponse(socialBotPost, botMemberInfo, null, false);
     }
 }
