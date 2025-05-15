@@ -132,8 +132,8 @@ public class CommentConverter {
                 userInfo,
                 comment.getContent(),
                 comment.getCreatedAt(),
-                comment.getRecommentCount(),
                 comment.getLikeCount(),
+                comment.getRecommentCount(),
                 isMine,
                 isLiked
         );
