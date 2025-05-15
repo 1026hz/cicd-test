@@ -74,8 +74,6 @@ public class BotPostService {
             // 2. AI 서버 요청 DTO 생성
             BotRequestDto.CreatePostRequest request = createBotRequest(boardType, filteredPosts);
 
-            log.info("소셜봇 request {}", request);
-
             // 3. AI 서버 호출
             BotRequestDto.AiPostResponse aiResponse = callAiServer(request);
 
