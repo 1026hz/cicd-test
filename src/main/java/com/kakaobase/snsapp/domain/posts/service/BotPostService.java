@@ -1,5 +1,7 @@
 package com.kakaobase.snsapp.domain.posts.service;
 
+import com.kakaobase.snsapp.domain.members.entity.Member;
+import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
 import com.kakaobase.snsapp.domain.posts.dto.BotRequestDto;
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
@@ -15,10 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +32,7 @@ public class BotPostService {
 
     private final PostService postService;
     private final WebClient webClient;
+    private final MemberRepository memberRepository;
 
     @Value("${ai.server.url}")
     private String aiServerUrl;
@@ -134,9 +134,10 @@ public class BotPostService {
                         throw new IllegalStateException("회원 정보를 찾을 수 없습니다. memberId: " + post.getMemberId());
                     }
 
-                    // Member 엔티티에서 className을 가져오는 로직이 필요
-                    // 현재 PostService의 getMemberInfo가 className을 포함하지 않을 수 있음
-                    String className = memberInfo.getOrDefault("className", "UNKNOWN");
+
+                    Optional<Member> member = memberRepository.findById(post.getMemberId());
+                    String className  = member.get().getClassName();
+                    log.debug("게시글 작성자 정보: {}, {}", memberInfo.get("nickname"), className);
 
                     return new BotRequestDto.PostDto(
                             new BotRequestDto.UserDto(
