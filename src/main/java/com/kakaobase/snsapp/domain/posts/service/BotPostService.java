@@ -55,7 +55,7 @@ public class BotPostService {
             List<Post> filteredPosts = List.of();
             for(Post post : recentPosts) {
                 if(post.getMemberId() != BotConstants.BOT_MEMBER_ID){
-                    filteredPosts.add(post);
+                    filteredPosts.addFirst(post);
                 }
             }
 
