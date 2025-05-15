@@ -15,6 +15,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,27 +50,51 @@ public class BotPostService {
         try {
             log.info("봇 게시글 생성 시작 - boardType: {}", boardType);
 
-            // 1. 최근 5개 게시글 조회
-            List<Post> recentPosts = postService.findByCursor(boardType, 6, null);
+            // 1. 최근 게시글 조회 (봇 게시글 필터링을 위해 여유있게 10개 조회)
+            List<Post> recentPosts = postService.findByCursor(boardType, 10, null);
+            log.info("조회된 최근 게시글 수: {}", recentPosts.size());
+
+            // ArrayList로 초기화 (최종 반환 타입은 List 인터페이스)
+            List<Post> filteredPosts = new ArrayList<>();
+
+            // 봇이 작성하지 않은 게시글만 필터링
+            int botPostCount = 0;
+            for (Post post : recentPosts) {
+                if (post.getMemberId() != BotConstants.BOT_MEMBER_ID) {
+                    filteredPosts.add(post);
+                    log.debug("일반 게시글 추가: id={}, content={}, createdAt={}",
+                            post.getId(), post.getContent(), post.getCreatedAt());
 
 
-            List<Post> filteredPosts = List.of();
-            for(Post post : recentPosts) {
-                if(post.getMemberId() != BotConstants.BOT_MEMBER_ID){
-                    filteredPosts.addFirst(post);
+                    if (filteredPosts.size() == 5) {
+                        log.info("5개의 일반 게시글 필터링 완료. 반복 중단");
+                        break;
+                    }
+                } else {
+                    botPostCount++;
+                    log.debug("봇 게시글 필터링 제외: id={}, content={}", post.getId(), post.getContent());
                 }
             }
 
-            if(filteredPosts.size() > 5){
-                while (filteredPosts.size() != 5) {
-                    filteredPosts.remove(0);
-                }
-            }
+            log.info("필터링 결과 - 총 게시글: {}, 봇 게시글: {}, 일반 게시글: {}",
+                    recentPosts.size(), botPostCount, filteredPosts.size());
 
-            else if (filteredPosts.size() < 5) {
-                log.warn("게시글이 5개미만입니다. 봇 게시글 생성을 건너뜁니다. - count: {}", filteredPosts.size());
+
+            if (filteredPosts.size() < 5) {
+                log.warn("게시글이 5개 미만입니다. 봇 게시글 생성을 건너뜁니다. - count: {}", filteredPosts.size());
                 return null;
             }
+
+            Collections.reverse(filteredPosts);
+
+            log.debug("역순 정렬 후 게시글 순서(오래된순):");
+            for (int i = 0; i < filteredPosts.size(); i++) {
+                Post post = filteredPosts.get(i);
+                log.debug("  {}. id={}, content={}, createdAt={}",
+                        i+1, post.getId(), post.getContent(), post.getCreatedAt());
+            }
+
+            log.info("AI에게 전송할 5개 게시글 준비 완료 (오래된순)");
 
 
             // 2. AI 서버 요청 DTO 생성
