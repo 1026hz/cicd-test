@@ -49,14 +49,32 @@ public class BotPostService {
             log.info("봇 게시글 생성 시작 - boardType: {}", boardType);
 
             // 1. 최근 5개 게시글 조회
-            List<Post> recentPosts = postService.findByCursor(boardType, 5, null);
-            if (recentPosts.size() < 5) {
-                log.warn("게시글이 5개 미만입니다. 봇 게시글 생성을 건너뜁니다. - count: {}", recentPosts.size());
+            List<Post> recentPosts = postService.findByCursor(boardType, 6, null);
+
+
+            List<Post> filteredPosts = List.of();
+            for(Post post : recentPosts) {
+                if(post.getMemberId() != BotConstants.BOT_MEMBER_ID){
+                    filteredPosts.add(post);
+                }
+            }
+
+            if(filteredPosts.size() > 5){
+                while (filteredPosts.size() != 5) {
+                    filteredPosts.remove(0);
+                }
+            }
+
+            else if (filteredPosts.size() < 5) {
+                log.warn("게시글이 5개미만입니다. 봇 게시글 생성을 건너뜁니다. - count: {}", filteredPosts.size());
                 return null;
             }
 
+
             // 2. AI 서버 요청 DTO 생성
-            BotRequestDto.CreatePostRequest request = createBotRequest(boardType, recentPosts);
+            BotRequestDto.CreatePostRequest request = createBotRequest(boardType, filteredPosts);
+
+            log.info("소셜봇 request {}", request);
 
             // 3. AI 서버 호출
             BotRequestDto.AiPostResponse aiResponse = callAiServer(request);
