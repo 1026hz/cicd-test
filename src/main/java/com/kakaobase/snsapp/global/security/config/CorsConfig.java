@@ -23,6 +23,8 @@ public class CorsConfig {
                 "http://172.16.24.221:8081",
                 "http://www.kakaobase.com",
                 "https://www.kakaobase.com",
+                "http://kakaobase.com",
+                "https://kakaobase.com",
                 "http://13.124.52.205:81",
                 "https://13.124.52.205:81"
 
