@@ -1,6 +1,7 @@
 // RecommentRepository.java
 package com.kakaobase.snsapp.domain.comments.repository;
 
+import com.kakaobase.snsapp.domain.comments.entity.Comment;
 import com.kakaobase.snsapp.domain.comments.entity.Recomment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -72,7 +73,7 @@ public interface RecommentRepository extends JpaRepository<Recomment, Long> {
             "ORDER BY r.id ASC " +
             "LIMIT :limit",
             nativeQuery = true)
-    List<Recomment> findByCommentIdWithCursor(
+    List<Recomment> findByRecommentIdWithCursor(
             @Param("commentId") Long commentId,
             @Param("cursor") Long cursor,
             @Param("limit") int limit);

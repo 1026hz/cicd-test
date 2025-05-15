@@ -38,7 +38,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     /**
      * 특정 게시글의 댓글을 커서 기반으로 조회합니다.
-     * 삭제되지 않은 댓글만 조회합니다.
+     * 삭제되지 않은 댓글을 작성순(오래된 순)으로 조회합니다.
      *
      * @param postId 게시글 ID
      * @param cursor 마지막으로 조회한 댓글 ID (첫 페이지에서는 null)
@@ -48,8 +48,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query(value = "SELECT c.* FROM comments c " +
             "WHERE c.post_id = :postId " +
             "AND c.deleted_at IS NULL " +
-            "AND (:cursor IS NULL OR c.id < :cursor) " +
-            "ORDER BY c.id DESC " +
+            "AND (:cursor IS NULL OR c.id > :cursor) " + // 부등호 방향 변경 (< 에서 > 로)
+            "ORDER BY c.id ASC " +                      // 정렬 방향 변경 (DESC에서 ASC로)
             "LIMIT :limit",
             nativeQuery = true)
     List<Comment> findByPostIdWithCursor(

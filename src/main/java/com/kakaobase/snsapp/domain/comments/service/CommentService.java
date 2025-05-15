@@ -268,7 +268,7 @@ public class CommentService {
         int limit = pageRequest.limit() != null ? pageRequest.limit() : DEFAULT_PAGE_SIZE;
 
         // 대댓글 목록 조회
-        List<Recomment> recomments = recommentRepository.findByCommentIdWithCursor(commentId, pageRequest.cursor(), limit);
+        List<Recomment> recomments = recommentRepository.findByRecommentIdWithCursor(commentId, pageRequest.cursor(), limit);
 
         if (recomments.isEmpty()) {
             return new CommentResponseDto.RecommentListResponse(
