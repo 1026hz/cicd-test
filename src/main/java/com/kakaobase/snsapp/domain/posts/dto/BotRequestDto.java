@@ -26,16 +26,7 @@ public class BotRequestDto {
 
             @Schema(description = "최근 5개 게시글 목록", required = true)
             List<PostDto> posts
-    ) {
-        /**
-         * 유효성 검사를 포함한 생성자
-         */
-        public CreatePostRequest {
-            if (posts == null || posts.size() != 5) {
-                throw new IllegalArgumentException("정확히 5개의 게시글이 필요합니다.");
-            }
-        }
-    }
+    ) { }
 
     /**
      * 게시글 정보 DTO
