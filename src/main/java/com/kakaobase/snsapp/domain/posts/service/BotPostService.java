@@ -157,6 +157,12 @@ public class BotPostService {
     private PostResponseDto.PostCreateResponse saveBotPost(BotRequestDto.AiPostResponse aiResponse) {
         BotRequestDto.AiResponseData data = aiResponse.data();
 
+        PostRequestDto.PostCreateRequestDto requestDto = new PostRequestDto.PostCreateRequestDto(
+                data.content(),
+                null,
+                null
+        );
+
         // AI 응답 데이터를 사용하여 게시글 생성
         Post.BoardType boardType;
         try {
@@ -166,20 +172,14 @@ public class BotPostService {
             throw new RuntimeException("잘못된 게시판 타입", e);
         }
 
-        // 게시글 생성 요청 DTO 생성
-        PostRequestDto.PostCreateRequestDto createRequest = new PostRequestDto.PostCreateRequestDto(
-                data.content(),
-                null,  // image_url
-                null   // youtube_url
-        );
 
         // PostService를 통해 게시글 생성
-        Post savedPost = postService.createPost(boardType, createRequest, BotConstants.BOT_MEMBER_ID);
+        Post socialBotPost = postService.createPost(boardType, requestDto, BotConstants.BOT_MEMBER_ID);
 
         // 봇 멤버 정보 조회
         Map<String, String> botMemberInfo = postService.getMemberInfo(BotConstants.BOT_MEMBER_ID);
 
         // PostConverter를 사용하여 응답 생성
-        return PostConverter.toPostCreateResponse(savedPost, botMemberInfo, null, false);
+        return PostConverter.toPostCreateResponse(socialBotPost, botMemberInfo, null, false);
     }
 }
