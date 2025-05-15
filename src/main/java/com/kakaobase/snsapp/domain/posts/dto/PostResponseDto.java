@@ -49,7 +49,6 @@ public class PostResponseDto {
             String youtubeSummary,
 
             @Schema(description = "생성 시간", example = "2024-04-23T12:34:56Z")
-            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
             @JsonProperty("created_at")
             LocalDateTime createdAt,
 
@@ -106,7 +105,6 @@ public class PostResponseDto {
             String youtubeSummary,
 
             @Schema(description = "생성 시간", example = "2024-04-23T10:00:00Z")
-            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
             @JsonProperty("created_at")
             LocalDateTime createdAt,
 
