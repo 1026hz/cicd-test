@@ -60,7 +60,7 @@ public class BotPostService {
             // 봇이 작성하지 않은 게시글만 필터링
             int botPostCount = 0;
             for (Post post : recentPosts) {
-                if (post.getMemberId() != BotConstants.BOT_MEMBER_ID) {
+                if (!post.getMemberId().equals(BotConstants.BOT_MEMBER_ID)) {
                     filteredPosts.add(post);
                     log.debug("일반 게시글 추가: id={}, content={}, createdAt={}",
                             post.getId(), post.getContent(), post.getCreatedAt());
