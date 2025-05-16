@@ -100,9 +100,9 @@ public class S3Service {
             String imageUrl = generateImageUrl(objectKey);
 
             return PresignedUrlResponseDto.builder()
-                    .presingedUrl(presignedUrl.toString())
-                    .imageUrl(imageUrl)
-                    .expiresIn(expirationTime)
+                    .presigned_url(presignedUrl.toString())
+                    .image_url(imageUrl)
+                    .expires_in(expirationTime)
                     .build();
         } catch (Exception e) {
             log.error("S3 Presigned URL 생성 실패", e);

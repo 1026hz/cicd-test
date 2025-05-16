@@ -3,13 +3,11 @@ package com.kakaobase.snsapp.domain.auth.controller;
 import com.kakaobase.snsapp.domain.auth.dto.AuthRequestDto;
 import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
 import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
-import com.kakaobase.snsapp.domain.auth.exception.AuthException;
+import com.kakaobase.snsapp.domain.auth.service.SecurityTokenManager;
 import com.kakaobase.snsapp.domain.auth.service.UserAuthenticationService;
 import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
-import com.kakaobase.snsapp.domain.members.entity.Member;
-import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
-import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
+import com.kakaobase.snsapp.global.error.exception.CustomException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,7 +35,7 @@ public class AuthController {
 
     private final UserAuthenticationService userAuthenticationService;
     private final CookieUtil cookieUtil;
-    private final MemberRepository memberRepository;
+    private final SecurityTokenManager securityTokenManager;
 
     /**
      * 로그인 API
@@ -67,26 +65,26 @@ public class AuthController {
 
         log.info("로그인 요청: {}", request.email());
 
+        // 쿠키에서 리프레시 토큰 추출
+        String cookieValue = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
+
+        // 토큰이 있다면 기존 토큰 파기
+        if (cookieValue != null) {
+            securityTokenManager.revokeRefreshToken(cookieValue);
+        }
+
         // 로그인 처리 및 토큰 발급
-        UserAuthenticationService.TokenWithCookie result = userAuthenticationService.login(
+        AuthResponseDto.LoginResponse result = userAuthenticationService.login(
                 request.email(),
                 request.password(),
-                httpRequest.getHeader("User-Agent")
+                httpRequest.getHeader("User-Agent"),
+                httpResponse
         );
-
-        // 리프레시 토큰을 쿠키에 설정
-        httpResponse.addCookie(result.refreshTokenCookie());
 
         log.info("로그인 성공: {}", request.email());
 
-        Member member = memberRepository.findByEmail(request.email())
-                .orElseThrow(()-> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, "email", "사용자의 이메일을 찾을 수 없습니다"));
-
         // 액세스 토큰을 응답 본문에 포함
-        return CustomResponse.success(
-                "로그인에 성공하였습니다.",
-                new AuthResponseDto.LoginResponse(result.accessToken(), member.getNickname(), member.getClassName())
-        );
+        return CustomResponse.success("로그인에 성공하였습니다.", result);
     }
 
     /**
@@ -112,16 +110,8 @@ public class AuthController {
 
         log.info("액세스 토큰 재발급 요청");
 
-        // 쿠키에서 리프레시 토큰 추출
-        String refreshToken = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
 
-        // 리프레시 토큰이 없으면 예외 발생
-        if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISSING);
-        }
-
-        // 액세스 토큰 재발급
-        String newAccessToken = userAuthenticationService.refreshAuthentication(refreshToken);
+        String newAccessToken = userAuthenticationService.refreshAuthentication(httpRequest);
 
         log.info("액세스 토큰 재발급 성공");
 
@@ -153,21 +143,10 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
-        log.info("로그아웃 요청");
+        log.info("로그아웃 요청 수신");
 
-        // 쿠키에서 리프레시 토큰 추출
-        String refreshToken = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
-
-        // 토큰 무효화 처리
-        if (refreshToken != null) {
-            userAuthenticationService.logout(refreshToken);
-            log.info("리프레시 토큰 무효화 완료");
-        }
-
-        // 쿠키에서 리프레시 토큰 제거
-        httpResponse.addCookie(cookieUtil.clearRefreshTokenCookie());
-
-        log.info("로그아웃 성공");
+        // Service에 전체 로그아웃 처리 위임
+        userAuthenticationService.logout(httpRequest, httpResponse);
 
         return CustomResponse.success("정상적으로 로그아웃되었습니다.");
     }

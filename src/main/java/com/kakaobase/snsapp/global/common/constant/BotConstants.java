@@ -40,7 +40,7 @@ public final class BotConstants {
      *
      * <p>일반 사용자 게시글이 이 수만큼 누적되면 봇이 게시글을 작성합니다.</p>
      */
-    public static final int POST_COUNT_THRESHOLD = 5;
+    public static final int POST_COUNT_THRESHOLD = 6;
 
     /**
      * AI 서버 요청 타임아웃 (초)

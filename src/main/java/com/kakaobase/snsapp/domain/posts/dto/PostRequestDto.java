@@ -89,13 +89,13 @@ public class PostRequestDto {
      *
      * <p>AI 서버에 YouTube 영상 요약을 요청할 때 사용하는 DTO입니다.</p>
      *
-     * @param youtubeUrl YouTube 영상 URL
+     * @param url YouTube 영상 URL
      */
     @Schema(description = "AI 서버 YouTube 요약 요청")
     public record YouTubeAiRequest(
             @Schema(description = "YouTube 영상 URL", example = "https://www.youtube.com/watch?v=VIDEO_ID", required = true)
-            @JsonProperty("youtube_url")
-            String youtubeUrl
+            @JsonProperty("url")
+            String url
     ) {
     }
 

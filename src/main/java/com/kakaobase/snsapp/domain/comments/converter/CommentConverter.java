@@ -29,15 +29,17 @@ public class CommentConverter {
      * @param request 댓글 작성 요청 DTO
      * @return 생성된 댓글 엔티티
      */
-    public Comment toCommentEntity(Post post, Member member, CommentRequestDto.CreateCommentRequest request) {
+    public Comment toCommentEntity(
+            Post post,
+            Member member,
+            CommentRequestDto.CreateCommentRequest request) {
         validateContent(request.content());
 
-        // parent_id가 있으면 대댓글 생성 요청이므로 검증
-        if (request.parent_id() != null) {
-            throw new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "commentId", "해당 대댓글을 찾을 수 없습니다.");
-        }
-
-        return new Comment(post, member, request.content());
+        return Comment.builder()
+                .post(post)
+                .member(member)
+                .content(request.content())
+                .build();
     }
 
     /**
@@ -51,7 +53,11 @@ public class CommentConverter {
     public Recomment toRecommentEntity(Comment parentComment, Member member, CommentRequestDto.CreateCommentRequest request) {
         validateContent(request.content());
 
-        return new Recomment(parentComment, member, request.content());
+        return Recomment.builder()
+                .comment(parentComment)
+                .member(member)
+                .content(request.content())
+                .build();
     }
 
     /**
@@ -104,14 +110,12 @@ public class CommentConverter {
      * 댓글 엔티티를 댓글 상세 정보 DTO로 변환
      *
      * @param comment 댓글 엔티티
-     * @param currentMemberId 현재 로그인한 회원 ID
-     * @param likedCommentIds 좋아요 누른 댓글 ID 목록
      * @return 댓글 상세 정보 DTO
      */
     public CommentResponseDto.CommentInfo toCommentInfo(
             Comment comment,
-            Long currentMemberId,
-            Set<Long> likedCommentIds
+            Boolean isMine,
+            Boolean isLiked
             // 팔로우 기능은 V2에서 구현 예정
             // Set<Long> followedMemberIds,
     ) {
@@ -129,40 +133,12 @@ public class CommentConverter {
                 comment.getContent(),
                 comment.getCreatedAt(),
                 comment.getLikeCount(),
-                comment.getMember().getId().equals(currentMemberId),
-                likedCommentIds != null && likedCommentIds.contains(comment.getId())
+                comment.getRecommentCount(),
+                isMine,
+                isLiked
         );
     }
 
-    /**
-     * 댓글 목록을 댓글 목록 응답 DTO로 변환
-     *
-     * @param comments 댓글 목록
-     * @param currentMemberId 현재 로그인한 회원 ID
-     * @param likedCommentIds 좋아요 누른 댓글 ID 목록
-     * @param nextCursor 다음 페이지 커서
-     * @return 댓글 목록 응답 DTO
-     */
-    public CommentResponseDto.CommentListResponse toCommentListResponse(
-            List<Comment> comments,
-            Long currentMemberId,
-            Set<Long> likedCommentIds,
-            Long nextCursor
-    ) {
-        List<CommentResponseDto.CommentInfo> commentInfos = comments.stream()
-                .map(comment -> toCommentInfo(
-                        comment,
-                        currentMemberId,
-                        likedCommentIds
-                ))
-                .collect(Collectors.toList());
-
-        return new CommentResponseDto.CommentListResponse(
-                commentInfos,
-                nextCursor != null,
-                nextCursor
-        );
-    }
 
     /**
      * 대댓글 목록을 대댓글 목록 응답 DTO로 변환

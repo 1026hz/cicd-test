@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.members.controller;
 
+import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
 import com.kakaobase.snsapp.domain.members.dto.MemberRequestDto;
 import com.kakaobase.snsapp.domain.members.service.MemberService;
 import com.kakaobase.snsapp.domain.members.service.EmailVerificationService;
@@ -13,13 +14,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 회원 관련 API 컨트롤러
  */
+@Slf4j
 @Tag(name = "회원 API", description = "회원 관련 API")
 @RestController
 @RequestMapping("/users")
@@ -57,7 +60,7 @@ public class MemberController {
      * 이메일 인증 코드 요청 API
      *
      * @param request 이메일 인증 요청 DTO
-     * @param authentication 인증 정보 (비밀번호 변경 시 필요)
+     * @param userDetails 인증 정보 (비밀번호 변경 시 필요)
      * @return 인증 코드 전송 결과
      */
     @Operation(summary = "이메일 인증 코드 요청", description = "이메일 인증 코드를 요청합니다")
@@ -75,9 +78,10 @@ public class MemberController {
     public CustomResponse<Void> requestEmailVerification(
             @Parameter(description = "이메일 인증 요청 정보", required = true)
             @Valid @RequestBody MemberRequestDto.EmailVerificationRequest request,
-            Authentication authentication) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        emailVerificationService.sendVerificationCode(request.email(), request.purpose(), authentication);
+        emailVerificationService.sendVerificationCode(request.email(), request.purpose(), userDetails);
+
         return CustomResponse.success("인증 이메일이 전송되었습니다.");
     }
 
@@ -85,7 +89,6 @@ public class MemberController {
      * 이메일 인증 코드 확인 API
      *
      * @param request 이메일 인증 확인 DTO
-     * @param authentication 인증 정보 (비밀번호 변경 시 필요)
      * @return 인증 확인 결과
      */
     @Operation(summary = "이메일 인증 코드 확인", description = "이메일 인증 코드를 확인합니다")
@@ -100,10 +103,10 @@ public class MemberController {
     @PostMapping("/email/verification")
     public CustomResponse<Void> verifyEmail(
             @Parameter(description = "이메일 인증 확인 정보", required = true)
-            @Valid @RequestBody MemberRequestDto.EmailVerification request,
-            Authentication authentication) {
+            @Valid @RequestBody MemberRequestDto.EmailVerification request
+            ) {
 
-        emailVerificationService.verifyCode(request.email(), request.code(), authentication);
+        emailVerificationService.verifyCode(request.email(), request.code());
         return CustomResponse.success("인증에 성공하였습니다.");
     }
 }

@@ -1,19 +1,26 @@
 package com.kakaobase.snsapp.domain.auth.service;
 
+import com.kakaobase.snsapp.domain.auth.converter.AuthConverter;
+import com.kakaobase.snsapp.domain.auth.dto.AuthResponseDto;
+import com.kakaobase.snsapp.domain.auth.entity.AuthToken;
+import com.kakaobase.snsapp.domain.auth.entity.RevokedRefreshToken;
 import com.kakaobase.snsapp.domain.auth.exception.AuthErrorCode;
 import com.kakaobase.snsapp.domain.auth.exception.AuthException;
 import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
 import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetailsService;
+import com.kakaobase.snsapp.domain.auth.repository.AuthTokenRepository;
+import com.kakaobase.snsapp.domain.auth.repository.RevokedRefreshTokenRepository;
 import com.kakaobase.snsapp.domain.auth.util.CookieUtil;
 
 import com.kakaobase.snsapp.domain.members.entity.Member;
 import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
+import com.kakaobase.snsapp.global.error.exception.CustomException;
 import com.kakaobase.snsapp.global.security.jwt.JwtTokenProvider;
-import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,14 +40,13 @@ public class UserAuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final CookieUtil cookieUtil;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
 
     /**
      * 사용자 로그인 처리 및 인증 토큰 발급
      */
     @Transactional
-    public TokenWithCookie login(String email, String password, String userAgent) {
+    public AuthResponseDto.LoginResponse login(String email, String password, String userAgent, HttpServletResponse response) {
         // 1. 이메일로 사용자 조회
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(GeneralErrorCode.RESOURCE_NOT_FOUND, email));
@@ -49,7 +55,6 @@ public class UserAuthenticationService {
         if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new AuthException(AuthErrorCode.INVALID_PASSWORD);
         }
-
 
         // 3. CustomUserDetailsService를 사용하여 인증 객체 생성
         CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserById(member.getId().toString());
@@ -70,19 +75,25 @@ public class UserAuthenticationService {
         // 6. 액세스 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(authentication);
 
-        // 7. 리프레시 토큰 쿠키 생성
-        Cookie refreshTokenCookie = cookieUtil.createRefreshTokenCookie(refreshToken);
 
-        return new TokenWithCookie(accessToken, refreshTokenCookie);
+        // 7. 쿠키에 RefreshToken주입
+        cookieUtil.createRefreshTokenCookie(refreshToken, response);
+
+        return new AuthResponseDto.LoginResponse(accessToken, member.getNickname(), member.getClassName());
     }
 
     /**
      * 리프레시 토큰을 사용해 새 액세스 토큰 발급
      */
     @Transactional
-    public String refreshAuthentication(String refreshToken) {
-        if (refreshToken == null) {
-            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISSING);
+    public String refreshAuthentication(HttpServletRequest httpRequest) {
+
+        // 1. 쿠키에서 리프레시 토큰 추출
+        String refreshToken = cookieUtil.extractRefreshTokenFromCookie(httpRequest);
+
+        // 토큰이 없으면 예외 발생
+        if (refreshToken == null || refreshToken.trim().isEmpty()) {
+            throw new CustomException(AuthErrorCode.REFRESH_TOKEN_MISSING);
         }
 
         // 1. 리프레시 토큰 검증 및 사용자 ID 추출
@@ -106,11 +117,23 @@ public class UserAuthenticationService {
      * 로그아웃 처리
      */
     @Transactional
-    public void logout(String refreshToken) {
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+
+        log.info("로그아웃 리퀘스트: {}", request.toString());
+        // 1. 쿠키에서 리프레시 토큰 추출
+        String refreshToken = cookieUtil.extractRefreshTokenFromCookie(request);
+
+        // 토큰이 없으면 예외 발생
         if (refreshToken == null) {
-            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISSING);
+            throw new CustomException(AuthErrorCode.REFRESH_TOKEN_MISSING);
         }
+
+        // 2. 토큰이 존재하면 무효화 처리
         securityTokenManager.revokeRefreshToken(refreshToken);
+
+        // 3. 쿠키에서 리프레시 토큰 제거
+        response.addCookie(cookieUtil.clearRefreshTokenCookie());
+
     }
 
     /**
@@ -123,10 +146,4 @@ public class UserAuthenticationService {
         }
         securityTokenManager.revokeAllTokensExcept(memberId, currentRefreshToken);
     }
-
-
-    /**
-     * 액세스 토큰과 리프레시 토큰 쿠키를 포함하는 응답 DTO
-     */
-    public record TokenWithCookie(String accessToken, Cookie refreshTokenCookie) {}
 }

@@ -1,0 +1,16 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+app:
+  jwt:
+    secure: false
+
+logging:
+  level:
+    com.amazonaws.util.EC2MetadataUtils: ERROR
+    com.amazonaws.services.s3: INFO
+    com.kakaobase.snsapp.global.security: DEBUG
+    com.kakaobase.snsapp.domain.auth: DEBUG
+    com.kakaobase.snsapp.domain.posts: DEBUG
+    org.springframework.security: DEBUG

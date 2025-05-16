@@ -25,17 +25,8 @@ public class BotRequestDto {
             String boardType,
 
             @Schema(description = "최근 5개 게시글 목록", required = true)
-            List<BotPost> posts
-    ) {
-        /**
-         * 유효성 검사를 포함한 생성자
-         */
-        public CreatePostRequest {
-            if (posts == null || posts.size() != 5) {
-                throw new IllegalArgumentException("정확히 5개의 게시글이 필요합니다.");
-            }
-        }
-    }
+            List<PostDto> posts
+    ) { }
 
     /**
      * 게시글 정보 DTO
@@ -45,9 +36,9 @@ public class BotRequestDto {
      * @param content 게시글 내용
      */
     @Schema(description = "게시글 정보")
-    public record BotPost(
+    public record PostDto(
             @Schema(description = "게시글 작성자 정보", required = true)
-            BotUser user,
+            UserDto user,
 
             @Schema(description = "게시글 작성 시각", example = "2025-04-27T10:30:32.311141Z", required = true)
             @JsonProperty("created_at")
@@ -65,7 +56,7 @@ public class BotRequestDto {
      * @param className 사용자 기수
      */
     @Schema(description = "사용자 정보")
-    public record BotUser(
+    public record UserDto(
             @Schema(description = "사용자 닉네임", example = "hazel.kim", required = true)
             String nickname,
 
@@ -105,7 +96,7 @@ public class BotRequestDto {
             String boardType,
 
             @Schema(description = "봇 사용자 정보")
-            BotUser user,
+            UserDto user,
 
             @Schema(description = "생성된 게시글 내용", example = "ㅎㅎ 다들 아침 인사도 해주시고...")
             String content
