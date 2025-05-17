@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -14,14 +15,25 @@ public class AuthResponseDto {
     @Schema(description = "로그인 또는 토큰 재발급 성공 응답 DTO")
     public record LoginResponse(
 
-            @Schema(description = "AccessToken (JWT 형식)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6...")
-            String access_token,
+            @Schema(description = "로그인 유저의 memberId", example = "12...")
+            @JsonProperty("member_id")
+            Long memberId,
 
             @Schema(description = "로그인 유저의 닉네임", example = "rick.lee")
+            @JsonProperty("nickname")
             String nickname,
 
             @Schema(description = "사용자의 기수명", example = "PANGYO_2")
-            String class_name
+            @JsonProperty("class_name")
+            String className,
+
+            @Schema(description = "유저의 프로필 이미지")
+            @JsonProperty("image_url")
+            String imageUrl,
+
+            @Schema(description = "AccessToken (JWT 형식)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6...")
+            @JsonProperty("access_token")
+            String accessToken
 
     ) {}
 

@@ -9,6 +9,7 @@ import com.kakaobase.snsapp.domain.posts.entity.PostImage;
 import com.kakaobase.snsapp.domain.posts.event.PostCreatedEvent;
 import com.kakaobase.snsapp.domain.posts.exception.PostErrorCode;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
+import com.kakaobase.snsapp.domain.posts.exception.YoutubeSummaryStatus;
 import com.kakaobase.snsapp.domain.posts.repository.PostImageRepository;
 import com.kakaobase.snsapp.domain.posts.repository.PostRepository;
 import com.kakaobase.snsapp.global.common.s3.service.S3Service;
@@ -18,9 +19,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -57,16 +59,28 @@ public class PostService {
             throw new PostException(PostErrorCode.INVALID_IMAGE_URL);
         }
 
+        String youtubeUrl = requestDto.youtube_url();
         // 게시글 엔티티 생성
         Post post = PostConverter.toPost(requestDto, memberId, boardType);
 
         // 게시글 저장
         Post savedPost = postRepository.save(post);
 
-        // 게시글 이미지 저장
-        if(requestDto.image_url() != null) {
+        if (StringUtils.hasText(requestDto.image_url())) {
             PostImage postImage = PostConverter.toPostImage(post, 0, requestDto.image_url());
             postImageRepository.save(postImage);
+        }
+
+        // 트랜잭션 커밋 후 비동기 요약 실행 예약
+        if (StringUtils.hasText(youtubeUrl)) {
+            final Long postId = savedPost.getId();  // final로 캡처
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info(" 트랜잭션 커밋 완료 후 유튜브 요약 시작: postId={}", postId);
+                    youtubeSummaryService.processYoutubeSummary(postId);
+                }
+            });
         }
 
         // 게시글 생성 이벤트 발행
@@ -331,28 +345,14 @@ public class PostService {
                 });
 
 
-        // 3. YouTube URL 존재 확인
-        String youtubeUrl = post.getYoutubeUrl();
-        if (youtubeUrl == null || youtubeUrl.isBlank()) {
-            log.error("YouTube URL이 없음 - postId: {}", postId);
-            throw new PostException(GeneralErrorCode.INVALID_FORMAT, "youtubeUrl");
+        String summary = post.getYoutubeSummary();
+
+        //summary의 상태값이 YoutubeSummaryStatus과 같다면 에러응답 반환
+        for (YoutubeSummaryStatus status : YoutubeSummaryStatus.values()) {
+            if (status.name().equals(summary)) {
+                throw new PostException(status.getPostErrorCode());
+            }
         }
-
-        //4. YouTube Summary가 이미 존재하는 지 확인
-        String youtubeSummary = post.getYoutubeSummary();
-        if(youtubeSummary != null) {
-            return new PostResponseDto.YouTubeSummaryResponse(youtubeSummary);
-        }
-
-        // 4. AI 서버에 요약 요청
-        log.info("AI 서버에 YouTube 요약 요청 - postId: {}, url: {}", postId, youtubeUrl);
-        String summary = youtubeSummaryService.getSummary(youtubeUrl);
-
-        // 5. 요약 내용 저장
-        post.setYoutubeSummary(summary);
-        log.info("YouTube 요약 저장 완료 - postId: {}", postId);
-
-        // 6. 응답 생성
         return PostResponseDto.YouTubeSummaryResponse.of(summary);
     }
 }

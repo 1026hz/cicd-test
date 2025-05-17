@@ -68,13 +68,6 @@ public class Post extends BaseSoftDeletableEntity {
         this.youtubeUrl = youtubeUrl;
     }
 
-
-    /**
-     * 게시판 유형을 정의하는 열거형
-     * <p>
-     * 게시글이 속한 게시판의 유형을 나타냅니다.
-     * </p>
-     */
     public enum BoardType {
         ALL,        // 전체 게시판
         PANGYO_1,   // 판교 1기 게시판
@@ -99,6 +92,10 @@ public class Post extends BaseSoftDeletableEntity {
      */
     public void increaseLikeCount() {
         this.likeCount++;
+    }
+
+    public void updateYoutubeSummary(String summary) {
+        this.youtubeSummary = summary;
     }
 
     /**
