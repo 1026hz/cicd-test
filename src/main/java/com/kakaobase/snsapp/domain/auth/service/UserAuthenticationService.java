@@ -79,7 +79,7 @@ public class UserAuthenticationService {
         // 7. 쿠키에 RefreshToken주입
         cookieUtil.createRefreshTokenCookie(refreshToken, response);
 
-        return new AuthResponseDto.LoginResponse(accessToken, member.getNickname(), member.getClassName());
+        return new AuthResponseDto.LoginResponse(member.getId(), member.getNickname(),member.getClassName(),member.getProfileImgUrl(), accessToken);
     }
 
     /**

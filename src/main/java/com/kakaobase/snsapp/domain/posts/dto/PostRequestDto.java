@@ -32,9 +32,9 @@ public class PostRequestDto {
          * @return 내용이 비어있으면 true, 아니면 false
          */
         public boolean isEmpty() {
-            return (content == null || content.trim().isEmpty())
-                    && (image_url == null || image_url.trim().isEmpty())
-                    && (youtube_url == null || youtube_url.trim().isEmpty());
+            return (content == null || content.isBlank())
+                    && (image_url == null || image_url.isBlank())
+                    && (youtube_url == null || youtube_url.isBlank());
         }
 
         /**
