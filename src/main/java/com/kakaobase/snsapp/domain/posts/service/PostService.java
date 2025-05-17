@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -57,16 +59,28 @@ public class PostService {
             throw new PostException(PostErrorCode.INVALID_IMAGE_URL);
         }
 
+        String youtubeUrl = requestDto.youtube_url();
         // 게시글 엔티티 생성
         Post post = PostConverter.toPost(requestDto, memberId, boardType);
 
         // 게시글 저장
         Post savedPost = postRepository.save(post);
 
-        // 게시글 이미지 저장
-        if(requestDto.image_url() != null) {
+        if (StringUtils.hasText(requestDto.image_url())) {
             PostImage postImage = PostConverter.toPostImage(post, 0, requestDto.image_url());
             postImageRepository.save(postImage);
+        }
+
+        // 트랜잭션 커밋 후 비동기 요약 실행 예약
+        if (StringUtils.hasText(youtubeUrl)) {
+            final Long postId = savedPost.getId();  // final로 캡처
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info(" 트랜잭션 커밋 완료 후 유튜브 요약 시작: postId={}", postId);
+                    youtubeSummaryService.processYoutubeSummary(postId);
+                }
+            });
         }
 
         // 게시글 생성 이벤트 발행
