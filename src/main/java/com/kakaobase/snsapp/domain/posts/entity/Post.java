@@ -77,18 +77,6 @@ public class Post extends BaseSoftDeletableEntity {
         JEJU_3      // 제주 3기 게시판
     }
 
-
-    public enum YoutubeSummaryStatus {
-        INVALID_URL,                       // 유효하지 않은 유튜브 링크
-        YOUTUBE_SUBTITLE_NOT_FOUND,        // 자막 없음
-        UNSUPPORTED_SUBTITLE_LANGUAGE,     // 자막 언어 미지원
-        YOUTUBE_VIDEO_PRIVATE,             // 비공개 영상
-        YOUTUBE_VIDEO_NOT_FOUND,           // 영상 없음
-        AI_SERVER_ERROR,                   //AI서버 에러
-        AI_TIMEOUT                         // AI서버 연결 실패
-    }
-
-
     /**
      * 유튜브 요약 내용을 설정합니다.
      *
