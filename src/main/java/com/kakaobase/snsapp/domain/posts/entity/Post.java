@@ -94,6 +94,10 @@ public class Post extends BaseSoftDeletableEntity {
         this.likeCount++;
     }
 
+    public void updateYoutubeSummary(String summary) {
+        this.youtubeSummary = summary;
+    }
+
     /**
      * 좋아요 수를 감소시킵니다.
      */
