@@ -2,6 +2,8 @@ package com.kakaobase.snsapp.domain.posts.service;
 
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
+import com.kakaobase.snsapp.global.error.exception.AiServerExcepiton;
+import com.kakaobase.snsapp.domain.posts.exception.YoutubeSummaryStatus;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,9 +62,12 @@ public class YouTubeSummaryService {
         } catch (WebClientResponseException e) {
             log.error("AI 서버 통신 실패 - Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new PostException(GeneralErrorCode.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
+        } catch (AiServerExcepiton e) {
             log.error("YouTube 요약 중 예외 발생", e);
-            throw new PostException(GeneralErrorCode.INTERNAL_SERVER_ERROR);
+            YoutubeSummaryStatus errorSatus = YoutubeSummaryStatus.fromAiErrorCode(e.getErrorCode()); //eunm에서 post.youtube_summary에 저장할 에러값 반환
+            String summary = errorSatus.toString();
+            log.debug("에러응답 파싱 응답: {}", summary);
+            return summary;
         }
     }
 }
