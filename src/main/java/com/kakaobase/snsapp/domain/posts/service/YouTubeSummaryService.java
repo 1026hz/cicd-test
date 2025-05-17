@@ -1,16 +1,22 @@
 package com.kakaobase.snsapp.domain.posts.service;
 
 import com.kakaobase.snsapp.domain.posts.dto.PostRequestDto;
+import com.kakaobase.snsapp.domain.posts.entity.Post;
 import com.kakaobase.snsapp.domain.posts.exception.PostException;
-import com.kakaobase.snsapp.global.error.exception.AiServerExcepiton;
 import com.kakaobase.snsapp.domain.posts.exception.YoutubeSummaryStatus;
+import com.kakaobase.snsapp.domain.posts.repository.PostRepository;
+import com.kakaobase.snsapp.global.error.exception.AiServerException;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
+import com.kakaobase.snsapp.global.error.handler.WebClientErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
@@ -24,9 +30,27 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class YouTubeSummaryService {
 
     private final WebClient webClient;
+    private final PostRepository postRepository;
 
     @Value("${ai.server.url}")
     private String aiServerUrl;
+
+    @Async
+    @Transactional
+    public void processYoutubeSummary(Long postId) {
+        log.info("YouTube 요약 시작");
+        Post post = postRepository.findById(postId)
+                .orElseThrow(()->new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "postId", "유튜브 요약게시글을 찾을 수 없음"));
+
+        log.debug("유튜브 요약할 게시글 Post: {}, PostId {}", post, post.getId());
+        try{
+            String summary = getSummary(post.getYoutubeUrl());
+            post.updateYoutubeSummary(summary);
+        } catch (AiServerException e) {
+            String summaryStatus = YoutubeSummaryStatus.fromAiErrorCode(e.getErrorCode()).name();
+            post.updateYoutubeSummary(summaryStatus);
+        }
+    }
 
     /**
      * YouTube 영상 요약 요청
@@ -37,6 +61,7 @@ public class YouTubeSummaryService {
      * @return 요약된 내용
      * @throws PostException AI 서버 통신 실패 또는 요약 실패 시
      */
+    @Async
     public String getSummary(String youtubeUrl) {
         log.info("YouTube 요약 요청 시작 - URL: {}", youtubeUrl);
 
@@ -60,14 +85,13 @@ public class YouTubeSummaryService {
             return summary;
 
         } catch (WebClientResponseException e) {
-            log.error("AI 서버 통신 실패 - Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new PostException(GeneralErrorCode.INTERNAL_SERVER_ERROR);
-        } catch (AiServerExcepiton e) {
-            log.error("YouTube 요약 중 예외 발생", e);
-            YoutubeSummaryStatus errorSatus = YoutubeSummaryStatus.fromAiErrorCode(e.getErrorCode()); //eunm에서 post.youtube_summary에 저장할 에러값 반환
-            String summary = errorSatus.toString();
-            log.debug("에러응답 파싱 응답: {}", summary);
-            return summary;
+            throw WebClientErrorHandler.parseAiServerException(e);
+        } catch (WebClientRequestException e) {
+            throw new AiServerException("internal_server_error", "Ai서버에서 응답이 없습니다", e);
+
+        } catch (Exception e) {
+            log.error("WebClientResponseException안터짐 에러코드: {}", e);
+            throw new PostException(GeneralErrorCode.INTERNAL_SERVER_ERROR, "요약도중 예기치못한 에러 발행");
         }
     }
 }
