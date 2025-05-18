@@ -1,9 +1,9 @@
 ---
 name: Issue Template
 about: 이슈 생성 탬플릿 입니다
-title: ''
-labels: ''
-assignees: ''
+title: "[BE]"
+labels: BE
+assignees: KangHyup
 
 ---
 

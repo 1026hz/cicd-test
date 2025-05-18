@@ -1,8 +1,8 @@
 ---
 name: Trouble Shooting
 about: kakaobase BE 트러블 슈팅 템플릿
-title: ''
-labels: ''
+title: "[BE]"
+labels: BE
 assignees: KangHyup
 
 ---
