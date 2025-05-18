@@ -1,5 +1,6 @@
 package com.kakaobase.snsapp.domain.posts.exception;
 
+import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -11,7 +12,7 @@ public enum YoutubeSummaryStatus {
     UNSUPPORTED_SUBTITLE_LANGUAGE("unsupported_subtitle_language", PostErrorCode.UNSUPPORTED_SUBTITLE_LANGUAGE),
     YOUTUBE_VIDEO_PRIVATE("video_private", PostErrorCode.YOUTUBE_VIDEO_PRIVATE),
     YOUTUBE_VIDEO_NOT_FOUND("video_not_found", PostErrorCode.YOUTUBE_VIDEO_NOT_FOUND),
-    AI_SERVER_FAILED("internal_server_error", PostErrorCode.AI_SERVER_ERROR);
+    AI_SERVER_FAILED("internal_server_error", PostErrorCode.INTERNAL_SERVER_ERROR);
 
     private final String aiErrorCode;
     private final PostErrorCode postErrorCode;
