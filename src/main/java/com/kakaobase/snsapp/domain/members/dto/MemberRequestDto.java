@@ -17,8 +17,10 @@ public class MemberRequestDto {
 
             @Schema(description = "비밀번호", example = "Test1234!")
             @NotBlank(message = "비밀번호는 필수 입력값입니다.")
-            @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d!@#$%^&*()]{8,20}$",
-                    message = "비밀번호는 8~20자리, 영문자와 숫자를 포함해야 합니다.")
+            @Pattern(
+                    regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*\\-_=+<>,\\.\\;:\\\"'\\{\\}\\[\\]/\\?])[A-Za-z\\d!@#$%^&*\\-_=+<>,\\.\\;:\\\"'\\{\\}\\[\\]/\\?]{8,20}$",
+                    message = "비밀번호는 8~20자리, 영문, 숫자, 특수문자를 포함해야 합니다"
+            )
             String password,
 
             @Schema(description = "이름", example = "홍길동")
