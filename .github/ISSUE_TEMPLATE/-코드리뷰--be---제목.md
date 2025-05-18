@@ -2,8 +2,8 @@
 name: "[코드리뷰] BE - 제목"
 about: 코드리뷰 템플릿입니다.
 title: "[코드리뷰] BE - "
-labels: ''
-assignees: 1026hz
+labels: BE, REVIEW
+assignees: KangHyup
 
 ---
 
