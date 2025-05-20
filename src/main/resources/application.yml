@@ -32,6 +32,8 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+server:
+  forward-headers-strategy: framework
 
 app:
   jwt:
