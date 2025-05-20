@@ -57,13 +57,6 @@ cloud:
       expiration-time: 300             # Presigned URL 만료 시간(초)
       max-file-size: 10485760          # 최대 파일 크기 (10MB)
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui/index.html
-    url: /v3/api-docs
-
 ai:
   server:
     url: ${AI_SERVER_URL}
