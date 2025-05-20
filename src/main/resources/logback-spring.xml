@@ -1,0 +1,23 @@
+<configuration>
+    <include resource="console-appender.xml"/>
+
+    <timestamp key="BY_DATE" datePattern="yyyy-MM-dd"/>
+    <property name="LOG_PATTERN"
+              value="[%d{yyyy-MM-dd HH:mm:ss}:%-4relative] %green([%thread]) %highlight(%-5level) %boldWhite([%C.%M:%yellow(%L)]) - %msg%n"/>
+
+    <springProperty name="DISCORD_ERROR_WEBHOOK_URL" source="logging.discord.webhook-url"/>
+
+    <!-- 콘솔 로깅은 항상 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- ✅ DiscordAppender는 prod 환경에서만 활성화 -->
+    <springProfile name="prod">
+        <include resource="discord-error-appender.xml"/>
+
+        <root level="INFO">
+            <appender-ref ref="ASYNC_DISCORD" />
+        </root>
+    </springProfile>
+</configuration>
