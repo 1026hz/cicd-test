@@ -7,6 +7,11 @@ app:
     secure: false
     refresh:
       domain: ${COOKIE_DOMAIN}
+      path: api/auth/tokens
+
+server:
+  servlet:
+    context-path: /api
 
 logging:
   level:
