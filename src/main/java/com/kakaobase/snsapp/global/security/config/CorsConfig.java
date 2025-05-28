@@ -16,7 +16,9 @@ public class CorsConfig {
         config.setAllowCredentials(true);
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
+                "https://localhost:3000",
                 "http://localhost:3001",
+                "https://localhost:3001",
                 "http://localhost:5500",
                 "http://localhost:8081",
                 "http://localhost:8080",
