@@ -1,6 +1,8 @@
 package com.kakaobase.snsapp.global.security;
 
 import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
+import com.kakaobase.snsapp.domain.comments.entity.Recomment;
+import com.kakaobase.snsapp.domain.comments.exception.CommentException;
 import com.kakaobase.snsapp.domain.comments.repository.CommentRepository;
 import com.kakaobase.snsapp.domain.comments.repository.RecommentRepository;
 import com.kakaobase.snsapp.domain.posts.converter.PostConverter;
@@ -77,9 +79,6 @@ public class AccessChecker {
      * @return 소유자이면 true, 아니면 false
      */
     public boolean isPostOwner(Long postId, CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            return false;
-        }
 
         // 관리자, 봇 권한이 있는 경우 소유자로 취급
         if (isAdminOrBot(userDetails)) {
@@ -92,8 +91,15 @@ public class AccessChecker {
             return false;
         }
 
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND,"postId"));
+
+        if(!post.getMemberId().equals(memberId)) {
+            throw new CustomException(GeneralErrorCode.FORBIDDEN);
+        }
+
         // 게시글 조회
-        return postRepository.findByIdAndMemberId(postId, memberId).isPresent();
+        return true;
     }
 
     /**
@@ -130,11 +136,7 @@ public class AccessChecker {
      * @param userDetails 인증된 사용자 정보
      * @return 권한이 있으면 true, 아니면 false
      */
-    public boolean canCommentOnPost(Long postId, CustomUserDetails userDetails) {
-        // 로그인한 사용자만 댓글 작성 가능
-        if (userDetails == null) {
-            return false;
-        }
+    public boolean canAccessOnComments(Long postId, CustomUserDetails userDetails) {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(GeneralErrorCode.RESOURCE_NOT_FOUND, "postId"));
@@ -151,9 +153,6 @@ public class AccessChecker {
      * @return 대댓글 소유자 여부
      */
     public boolean isRecommentOwner(Long recommentId, CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            return false;
-        }
 
         // 관리자, 봇 권한이 있는 경우 소유자로 취급
         if (isAdminOrBot(userDetails)) {
@@ -165,8 +164,15 @@ public class AccessChecker {
             return false;
         }
 
-        // RecommentRepository에서 소유자 확인 쿼리 사용
-        return recommentRepository.findByIdAndMemberId(recommentId, memberId).isPresent();
+        Recomment recomment = recommentRepository.findById(recommentId)
+                .orElseThrow(() -> new CommentException(GeneralErrorCode.RESOURCE_NOT_FOUND, "recommentId"));
+
+        if(!recomment.getMember().getId().equals(memberId)) {
+            throw new CustomException(GeneralErrorCode.FORBIDDEN);
+        }
+
+
+        return true;
     }
 
     /**
