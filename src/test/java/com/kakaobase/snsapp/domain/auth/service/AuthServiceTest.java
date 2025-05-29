@@ -63,15 +63,13 @@ class AuthServiceTest {
 
     private CustomUserDetails mockKbtUserDetails;
     private CustomUserDetails mockAdminUserDetails;
-    private CustomUserDetails mockBannedUserDetails;
     private AuthRequestDto.Login loginRequest;
 
     @BeforeEach
     void setUp() {
         //다양한 유저 타입의 MockCustomUserDetails 생성
-        mockKbtUserDetails = CustomUserDetailsFixture.createMockKbtCustomUserDetails();
-        mockAdminUserDetails = CustomUserDetailsFixture.createMockAdminCustomUserDetails();
-        mockBannedUserDetails = CustomUserDetailsFixture.createMockBannedCustomUserDetails();
+        mockKbtUserDetails = CustomUserDetailsFixture.createKbtCustomUserDetails();
+        mockAdminUserDetails = CustomUserDetailsFixture.createAdminCustomUserDetails();
 
         // 로그인 요청 DTO 생성
         loginRequest = new AuthRequestDto.Login(
