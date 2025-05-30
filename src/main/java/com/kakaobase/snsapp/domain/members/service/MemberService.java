@@ -216,7 +216,7 @@ public class MemberService {
     }
 
     @Transactional
-    public void ChangePassword(MemberRequestDto.PasswordChange request) {
+    public void changePassword(MemberRequestDto.PasswordChange request) {
         log.debug("비밀번호 수정 시작");
 
         String email = request.email();

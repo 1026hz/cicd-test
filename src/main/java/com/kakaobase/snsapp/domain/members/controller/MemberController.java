@@ -62,7 +62,7 @@ public class MemberController {
             @Parameter(description = "비밀번호 수정 요청", required = true)
             @Valid @RequestBody MemberRequestDto.PasswordChange request
     ) {
-        memberService.ChangePassword(request);
+        memberService.changePassword(request);
         return CustomResponse.success("비밀번호 수정이 완료되었습니다");
     }
 
