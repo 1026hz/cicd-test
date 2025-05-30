@@ -50,4 +50,22 @@ public class MemberRequestDto {
             @JsonProperty("github_url")
             String githubUrl
     ) {}
+
+        @Schema(description = "비밀번호 수정 요청 DTO")
+        public record PasswordChange(
+                @Schema(description = "이메일", example = "example@domain.com")
+                @NotBlank(message = "이메일은 필수 입력값입니다.")
+                @Email(message = "이메일 형식이 올바르지 않습니다.")
+                @JsonProperty("email")
+                String email,
+
+                @Schema(description = "비밀번호", example = "Test1234!")
+                @NotBlank(message = "비밀번호는 필수 입력값입니다.")
+                @Pattern(
+                        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*\\-_=+<>,\\.\\;:\\\"'\\{\\}\\[\\]/\\?])[A-Za-z\\d!@#$%^&*\\-_=+<>,\\.\\;:\\\"'\\{\\}\\[\\]/\\?]{8,20}$",
+                        message = "비밀번호는 8~20자리, 영문, 숫자, 특수문자를 포함해야 합니다"
+                )
+                @JsonProperty("new_password")
+                String NewPassword
+        ) {}
 }

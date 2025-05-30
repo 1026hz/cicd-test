@@ -39,7 +39,7 @@ public class MemberController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomResponse<Void> signUp(
+    public CustomResponse<Void> postUser(
             @Parameter(description = "회원가입 정보", required = true)
             @Valid @RequestBody MemberRequestDto.SignUp request) {
 
@@ -47,6 +47,24 @@ public class MemberController {
         return CustomResponse.success("회원가입이 완료되었습니다.");
     }
 
+    @Operation(summary = "비밀번호 수정", description = "회원의 비밀번호를 수정합니다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 수정성공",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class))),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 입력값"),
+            @ApiResponse(responseCode = "401", description = "이메일 인증 미완료"),
+            @ApiResponse(responseCode = "401", description = "로그인 되지 않음")
+    })
+    @PutMapping("/password")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("isAuthenticated()")
+    public CustomResponse<Void> putPassword(
+            @Parameter(description = "비밀번호 수정 요청", required = true)
+            @Valid @RequestBody MemberRequestDto.PasswordChange request
+    ) {
+        memberService.changePassword(request);
+        return CustomResponse.success("비밀번호 수정이 완료되었습니다");
+    }
 
 
     @Operation(summary = "회원탈퇴", description = "기존 회원을 탈퇴시킵니다")
@@ -60,7 +78,7 @@ public class MemberController {
     @DeleteMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("isAuthenticated()")
-    public CustomResponse<Void> unregister() {
+    public CustomResponse<Void> deleteUser() {
 
         memberService.unregister();
         return CustomResponse.success("회원탈퇴가 완료되었습니다.");

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberConverter memberConverter;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 회원 가입 처리
@@ -193,7 +195,7 @@ public class MemberService {
 
     @Transactional
     public void unregister() {
-        log.info("회원탈퇴 처리 시작: {}");
+        log.debug("회원탈퇴 처리 시작");
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
@@ -210,6 +212,25 @@ public class MemberService {
 
         // Member 엔티티 삭제
         member.softDelete();
+
+    }
+
+    @Transactional
+    public void changePassword(MemberRequestDto.PasswordChange request) {
+        log.debug("비밀번호 수정 시작");
+
+        String email = request.email();
+        String newPassword = request.NewPassword();
+
+        // 이메일 인증 확인
+        if (!emailVerificationService.isEmailVerified(email)) {
+            throw new MemberException(MemberErrorCode.EMAIL_VERIFICATION_FAILED);
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(GeneralErrorCode.RESOURCE_NOT_FOUND, "userId"));
+
+        member.updatePassword(passwordEncoder.encode(newPassword));
 
     }
 }
