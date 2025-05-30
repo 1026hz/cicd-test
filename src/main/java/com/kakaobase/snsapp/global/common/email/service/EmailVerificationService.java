@@ -1,10 +1,9 @@
-package com.kakaobase.snsapp.domain.members.service;
+package com.kakaobase.snsapp.global.common.email.service;
 
 import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
 import com.kakaobase.snsapp.domain.members.exception.MemberErrorCode;
 import com.kakaobase.snsapp.domain.members.exception.MemberException;
 import com.kakaobase.snsapp.domain.members.repository.MemberRepository;
-import com.kakaobase.snsapp.global.common.email.EmailSender;
 import com.kakaobase.snsapp.global.error.code.GeneralErrorCode;
 import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.Getter;
