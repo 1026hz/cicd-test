@@ -68,4 +68,14 @@ public class MemberRequestDto {
                 @JsonProperty("new_password")
                 String NewPassword
         ) {}
+
+        @Schema(description = "GithubUrl 수정 요청 DTO")
+        public record GithubUrlChange(
+
+                @Schema(description = "수정할 GitHub URL", example = "https://github.com/gildong")
+                @Pattern(regexp = "^(https://github\\.com/)[A-Za-z0-9_-]+(/)?.*$",
+                        message = "GitHub URL 형식이 올바르지 않습니다. https://github.com/{username} 형식이어야 합니다.")
+                @JsonProperty("github_url")
+                String githubUrl
+        ) {}
 }
