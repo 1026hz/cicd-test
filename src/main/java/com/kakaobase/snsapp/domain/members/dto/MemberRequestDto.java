@@ -66,6 +66,6 @@ public class MemberRequestDto {
                         message = "비밀번호는 8~20자리, 영문, 숫자, 특수문자를 포함해야 합니다"
                 )
                 @JsonProperty("new_password")
-                String password
+                String NewPassword
         ) {}
 }
