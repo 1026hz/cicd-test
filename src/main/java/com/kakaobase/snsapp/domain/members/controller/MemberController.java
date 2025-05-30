@@ -39,7 +39,7 @@ public class MemberController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomResponse<Void> signUp(
+    public CustomResponse<Void> postUser(
             @Parameter(description = "회원가입 정보", required = true)
             @Valid @RequestBody MemberRequestDto.SignUp request) {
 
@@ -76,7 +76,7 @@ public class MemberController {
     @DeleteMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("isAuthenticated()")
-    public CustomResponse<Void> unregister() {
+    public CustomResponse<Void> deleteUser() {
 
         memberService.unregister();
         return CustomResponse.success("회원탈퇴가 완료되었습니다.");
