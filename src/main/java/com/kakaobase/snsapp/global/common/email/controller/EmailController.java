@@ -1,7 +1,6 @@
 package com.kakaobase.snsapp.global.common.email.controller;
 
-import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
-import com.kakaobase.snsapp.domain.members.dto.MemberRequestDto;
+
 import com.kakaobase.snsapp.global.common.email.dto.EmailRequest;
 import com.kakaobase.snsapp.global.common.email.service.EmailVerificationService;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
@@ -15,7 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +33,6 @@ public class EmailController {
      * 이메일 인증 코드 요청 API
      *
      * @param request 이메일 인증 요청 DTO
-     * @param userDetails 인증 정보 (비밀번호 변경 시 필요)
      * @return 인증 코드 전송 결과
      */
     @Operation(summary = "이메일 인증 코드 요청", description = "이메일 인증 코드를 요청합니다")
@@ -52,10 +49,9 @@ public class EmailController {
     @PostMapping("/email/verification-requests")
     public CustomResponse<Void> requestEmailVerification(
             @Parameter(description = "이메일 인증 요청 정보", required = true)
-            @Valid @RequestBody EmailRequest.EmailVerificationRequest request,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @Valid @RequestBody EmailRequest.EmailVerificationRequest request) {
 
-        emailVerificationService.sendVerificationCode(request.email(), request.purpose(), userDetails);
+        emailVerificationService.sendVerificationCode(request.email(), request.purpose());
 
         return CustomResponse.success("인증 이메일이 전송되었습니다.");
     }

@@ -9,6 +9,9 @@ import com.kakaobase.snsapp.global.error.exception.CustomException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -42,11 +45,10 @@ public class EmailVerificationService {
      *
      * @param email 인증할 이메일
      * @param purpose 인증 목적 (ex. 회원가입, 비밀번호 재설정 등)
-     * @param userDetails 인증 객체 (비밀번호 재설정 시 필요)
      */
-    public void sendVerificationCode(String email, String purpose, CustomUserDetails userDetails) {
+    public void sendVerificationCode(String email, String purpose) {
         // 요청 유효성 검증
-        validateEmailRequest(email, purpose, userDetails);
+        validateEmailRequest(email, purpose);
 
         // 인증 코드 생성 및 저장
         String code = generateCode();
@@ -101,11 +103,13 @@ public class EmailVerificationService {
      *
      * @param email 요청 이메일
      * @param purpose 인증 목적
-     * @param userDetails 로그인 인증 객체
      */
-    private void validateEmailRequest(String email, String purpose, CustomUserDetails userDetails) {
+    private void validateEmailRequest(String email, String purpose) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if(purpose.equals("password-reset")) {
-            if (userDetails == null) {
+            if(auth instanceof AnonymousAuthenticationToken) {
                 throw new CustomException(MemberErrorCode.UNAUTHORIZED_ACCESS);
             }
             if (!memberRepository.existsByEmail(email)) {
