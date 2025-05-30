@@ -58,10 +58,12 @@ public class MemberController {
     @PutMapping("/password")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("isAuthenticated()")
-    public CustomResponse<Void> putPassword() {
-
-        memberService.ChangePassword();
-        return CustomResponse.success("회원탈퇴가 완료되었습니다.");
+    public CustomResponse<Void> putPassword(
+            @Parameter(description = "비밀번호 수정 요청", required = true)
+            @Valid @RequestBody MemberRequestDto.PasswordChange request
+    ) {
+        memberService.ChangePassword(request);
+        return CustomResponse.success("비밀번호 수정이 완료되었습니다");
     }
 
 
