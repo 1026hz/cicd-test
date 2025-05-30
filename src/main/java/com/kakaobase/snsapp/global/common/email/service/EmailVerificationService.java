@@ -108,7 +108,7 @@ public class EmailVerificationService {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if(purpose.equals("password-reset")) {
+        if(purpose.equals("password-change") || purpose.equals("unregister")) {
             if(auth instanceof AnonymousAuthenticationToken) {
                 throw new CustomException(MemberErrorCode.UNAUTHORIZED_ACCESS);
             }
