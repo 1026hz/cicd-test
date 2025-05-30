@@ -4,6 +4,7 @@ import com.kakaobase.snsapp.domain.auth.principal.CustomUserDetails;
 import com.kakaobase.snsapp.domain.comments.dto.BotRecommentRequestDto;
 import com.kakaobase.snsapp.domain.members.converter.MemberConverter;
 import com.kakaobase.snsapp.domain.members.dto.MemberRequestDto;
+import com.kakaobase.snsapp.domain.members.dto.MemberResponseDto;
 import com.kakaobase.snsapp.domain.members.entity.Member;
 import com.kakaobase.snsapp.domain.members.exception.MemberErrorCode;
 import com.kakaobase.snsapp.domain.members.exception.MemberException;
@@ -245,5 +246,17 @@ public class MemberService {
                 .orElseThrow(() -> new MemberException(GeneralErrorCode.RESOURCE_NOT_FOUND, "userId"));
 
         member.updateGithubUrl(request.githubUrl());
+    }
+
+    public MemberResponseDto.ProfileImageChange changProfileImageUrl(MemberRequestDto.@Valid ProfileImageChange request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+
+        Member member = memberRepository.findById(Long.valueOf(userDetails.getId()))
+                .orElseThrow(() -> new MemberException(GeneralErrorCode.RESOURCE_NOT_FOUND, "userId"));
+
+        member.updateProfile(request.imageUrl());
+
+        return new MemberResponseDto.ProfileImageChange(request.imageUrl());
     }
 }
