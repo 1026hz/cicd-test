@@ -106,12 +106,7 @@ public class EmailVerificationService {
      */
     private void validateEmailRequest(String email, String purpose) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         if(purpose.equals("password-change") || purpose.equals("unregister")) {
-            if(auth instanceof AnonymousAuthenticationToken) {
-                throw new CustomException(MemberErrorCode.UNAUTHORIZED_ACCESS);
-            }
             if (!memberRepository.existsByEmail(email)) {
                 throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
             }
