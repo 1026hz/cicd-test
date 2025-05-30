@@ -2,7 +2,6 @@ package com.kakaobase.snsapp.domain.members.controller;
 
 import com.kakaobase.snsapp.domain.members.dto.MemberRequestDto;
 import com.kakaobase.snsapp.domain.members.service.MemberService;
-import com.kakaobase.snsapp.global.common.email.service.EmailVerificationService;
 import com.kakaobase.snsapp.global.common.response.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -46,4 +46,25 @@ public class MemberController {
         memberService.signUp(request);
         return CustomResponse.success("회원가입이 완료되었습니다.");
     }
+
+
+
+    @Operation(summary = "회원탈퇴", description = "기존 회원을 탈퇴시킵니다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원탈퇴 성공",
+                    content = @Content(schema = @Schema(implementation = CustomResponse.class))),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 입력값"),
+            @ApiResponse(responseCode = "401", description = "이메일 인증 미완료"),
+            @ApiResponse(responseCode = "401", description = "로그인 되지 않음")
+    })
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("isAuthenticated()")
+    public CustomResponse<Void> unregister() {
+
+        memberService.unregister();
+        return CustomResponse.success("회원탈퇴가 완료되었습니다.");
+    }
+
+
 }
