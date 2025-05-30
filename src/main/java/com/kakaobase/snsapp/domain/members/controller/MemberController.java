@@ -77,7 +77,6 @@ public class MemberController {
     })
     @DeleteMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PreAuthorize("isAuthenticated()")
     public CustomResponse<Void> deleteUser() {
 
         memberService.unregister();
