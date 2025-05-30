@@ -16,9 +16,9 @@ public class EmailRequest {
             @JsonProperty("email")
             String email,
 
-            @Schema(description = "인증 목적", example = "sign-up", allowableValues = {"sign-up", "password-reset"})
+            @Schema(description = "인증 목적", example = "sign-up", allowableValues = {"sign-up", "password-reset", "unregister"})
             @NotNull(message = "인증 목적은 필수 입력값입니다.")
-            @Pattern(regexp = "^(sign-up|password-reset)$", message = "인증 목적은 sign-up 또는 password-reset만 가능합니다.")
+            @Pattern(regexp = "^(sign-up|password-reset|unregister)$", message = "인증목적이 올바르지 않습니다")
             @JsonProperty("purpose")
             String purpose
     ) {}
