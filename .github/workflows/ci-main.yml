@@ -3,6 +3,8 @@ name: Backend CI - Main (from Release)
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
     paths-ignore:
       - '**.md'
       - '**/README*'
