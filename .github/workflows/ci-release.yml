@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    name: Build Check
+    name: Release Build Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
         run: |
           if [ "${{ needs.ci.result }}" == "success" ]; then
             STATUS="✅ release CI 성공"
-            COLOR="3066993"
+            COLOR="3447003"
           else
             STATUS="❌ release CI 실패"
             COLOR="15158332"
