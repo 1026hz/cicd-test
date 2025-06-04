@@ -30,10 +30,10 @@ jobs:
       - name: Send Discord Notification
         run: |
           if [ "${{ needs.ci.result }}" == "success" ]; then
-            STATUS="✅ 성공"
+            STATUS="✅ develop CI 성공"
             COLOR="3066993"
           else
-            STATUS="❌ 실패"
+            STATUS="❌ develop CI 실패"
             COLOR="15158332"
           fi
 
