@@ -18,8 +18,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Lint (Checkstyle)
-        run: ./gradlew checkstyleMain checkstyleTest
+      - name: Build Project
+        run: ./gradlew build
 
   notify:
     name: Discord Notification
