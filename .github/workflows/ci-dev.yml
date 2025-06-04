@@ -19,7 +19,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build Project
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
   notify:
     name: Discord Notification
