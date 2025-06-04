@@ -16,6 +16,16 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: ${BUCKET_NAME}
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -45,6 +55,11 @@ app:
     refresh:
       expiration-time: 604800000 # 7일
       token-name: kakaobase_refresh_token
+      path: api/auth/tokens
+  s3:
+    expiration-time: 300
+    max-file-size: 10485760
+
       path: /auth/tokens
 
 cloud:
