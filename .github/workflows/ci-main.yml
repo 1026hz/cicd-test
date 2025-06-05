@@ -1,14 +1,17 @@
-name: Backend CI - Release
+name: Backend CI - Main (from Release)
 
 on:
   push:
-    branches: [release/**]
+    branches: [main]
   pull_request:
-    branches: [release/**]
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '**/README*'
 
 jobs:
   ci:
-    name: Release Build Check
+    name: Main Release Build Check
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -33,10 +36,10 @@ jobs:
       - name: Send Discord Notification
         run: |
           if [ "${{ needs.ci.result }}" == "success" ]; then
-            STATUS="✅ release CI 성공"
-            COLOR="3447003"
+            STATUS="✅ main CI 성공"
+            COLOR="5763719"
           else
-            STATUS="❌ release CI 실패"
+            STATUS="❌ main CI 실패"
             COLOR="15158332"
           fi
 
