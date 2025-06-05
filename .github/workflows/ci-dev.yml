@@ -27,6 +27,7 @@ jobs:
     needs: ci
     if: always()
     runs-on: ubuntu-latest
+    environment: Develop
     steps:
       - name: Send Discord Notification
         run: |
